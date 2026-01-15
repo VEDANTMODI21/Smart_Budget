@@ -1,0 +1,16 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* TEMPLATE STYLES: These styles are used as a base template. */
+body {
+	@apply bg-gradient-to-br from-indigo-900 via-purple-900 to-slate-900 text-white;
+	font-family: 'DM Sans', sans-serif;
+	min-height: 100vh;
+	margin: 0;
+}
+
+/* ensure root fills the viewport so background is visible */
+#root {
+	min-height: 100vh;
+}
