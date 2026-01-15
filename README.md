@@ -9,7 +9,7 @@ A full-stack budget management application with secure authentication, expense t
 - 🤝 Settlement tracking
 - ⏰ Reminders and notifications
 - 📊 Data export (CSV, JSON, PDF)
-- 🌐 Network access for testing
+- 🌐 Optional network access for testing
 
 ## Tech Stack
 
@@ -33,126 +33,91 @@ A full-stack budget management application with secure authentication, expense t
 - MongoDB (local or Atlas)
 
 ### 1. Install Dependencies
-
 ```bash
 npm install
-```
+2. Configure Environment Variables
+Create a .env file in the root directory:
 
-### 2. Configure Environment Variables
-
-Create a `.env` file in the root directory:
-
-```env
-# Server Configuration
+env
+Copy code
 PORT=5000
 NODE_ENV=development
 
-# MongoDB Connection
-MONGODB_URI=mongodb://localhost:27017/smart-budget
-# For MongoDB Atlas: mongodb+srv://username:password@cluster.mongodb.net/smart-budget
+MONGODB_URI=<your-mongodb-connection-string>
+JWT_SECRET=<your-jwt-secret>
 
-# JWT Secret (CHANGE THIS IN PRODUCTION!)
-JWT_SECRET=your-super-secret-jwt-key-change-this-in-production
-
-# Frontend URL
 FRONTEND_URL=http://localhost:5173
+# NETWORK_IP=<your-local-ip> (optional)
+⚠️ Do NOT commit .env to GitHub.
 
-# Network IP (for testing from other devices)
-NETWORK_IP=10.3.30.166
-```
+3. Start MongoDB
+Local MongoDB
 
-### 3. Start MongoDB
-
-**Local MongoDB:**
-```bash
-# Windows
+bash
+Copy code
 mongod
+MongoDB Atlas
 
-# macOS/Linux
-sudo systemctl start mongod
-# or
-brew services start mongodb-community
-```
+Create a free cluster
 
-**MongoDB Atlas (Cloud):**
-- Sign up at https://www.mongodb.com/cloud/atlas
-- Create a free cluster
-- Get connection string and update `MONGODB_URI` in `.env`
+Use the provided connection string in MONGODB_URI
 
-### 4. Start Backend Server
-
-```bash
+4. Start Backend Server
+bash
+Copy code
 npm run server
-# or for auto-reload
-npm run dev:server
-```
+Backend runs on:
 
-Backend will run on `http://localhost:5000`
-
-### 5. Start Frontend Development Server
-
-```bash
+arduino
+Copy code
+http://localhost:5000
+5. Start Frontend
+bash
+Copy code
 npm run dev
-```
+Frontend runs on:
 
-Frontend will run on `http://localhost:5173`
+arduino
+Copy code
+http://localhost:5173
+API Endpoints
+Authentication
+POST /api/auth/register
 
-## API Endpoints
+POST /api/auth/login
 
-### Authentication
-- `POST /api/auth/register` - Register with password
-- `POST /api/auth/login` - Login with password
-- `POST /api/auth/otp/generate` - Generate OTP
-- `POST /api/auth/otp/verify` - Verify OTP and login/register
-- `GET /api/auth/me` - Get current user (requires auth)
+POST /api/auth/otp/generate
 
-### Expenses
-- `GET /api/expenses` - Get all expenses (requires auth)
-- `POST /api/expenses` - Create expense (requires auth)
-- `PUT /api/expenses/:id` - Update expense (requires auth)
-- `DELETE /api/expenses/:id` - Delete expense (requires auth)
-- `GET /api/expenses/stats` - Get statistics (requires auth)
+POST /api/auth/otp/verify
 
-### Settlements
-- `GET /api/settlements` - Get all settlements (requires auth)
-- `POST /api/settlements` - Create settlement (requires auth)
-- `PUT /api/settlements/:id` - Update settlement (requires auth)
-- `DELETE /api/settlements/:id` - Delete settlement (requires auth)
+GET /api/auth/me
 
-### Reminders
-- `GET /api/reminders` - Get all reminders (requires auth)
-- `POST /api/reminders` - Create reminder (requires auth)
-- `PUT /api/reminders/:id` - Update reminder (requires auth)
-- `DELETE /api/reminders/:id` - Delete reminder (requires auth)
+Expenses
+GET /api/expenses
 
-## Security Features
+POST /api/expenses
 
-- ✅ Password hashing with bcryptjs
-- ✅ JWT token-based authentication
-- ✅ Protected API routes
-- ✅ CORS configuration
-- ✅ Input validation
-- ✅ Secure OTP generation and expiration
+PUT /api/expenses/:id
 
-## Network Access
+DELETE /api/expenses/:id
 
-The server is configured to accept connections from other devices on your network:
+Settlements
+GET /api/settlements
 
-- **Backend**: `http://YOUR_IP:5000`
-- **Frontend**: `http://YOUR_IP:5173`
+POST /api/settlements
 
-Update `VITE_API_URL` in frontend `.env` or `vite.config.js` to point to your backend IP.
+PUT /api/settlements/:id
 
-## Production Deployment
+DELETE /api/settlements/:id
 
-1. Set `NODE_ENV=production`
-2. Change `JWT_SECRET` to a strong random string
-3. Use MongoDB Atlas or secure MongoDB instance
-4. Configure proper CORS origins
-5. Use HTTPS
-6. Set up environment variables securely
+Reminders
+GET /api/reminders
 
-## License
+POST /api/reminders
 
+PUT /api/reminders/:id
+
+DELETE /api/reminders/:id
+
+License
 MIT
-
