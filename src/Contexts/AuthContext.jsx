@@ -46,10 +46,24 @@ export function AuthProvider({ children }) {
   };
 
   const loginWithOTP = async (email, otp, name) => {
-    const response = await authAPI.verifyOTP(email, otp, name);
-    localStorage.setItem('token', response.token);
-    setUser(response.user);
-    return response;
+    try {
+      const response = await authAPI.verifyOTP(email, otp, name);
+      
+      if (!response.token) {
+        throw new Error('No token received from server');
+      }
+      
+      if (!response.user) {
+        throw new Error('No user data received from server');
+      }
+      
+      localStorage.setItem('token', response.token);
+      setUser(response.user);
+      return response;
+    } catch (error) {
+      console.error('OTP login error:', error);
+      throw error;
+    }
   };
 
   const generateOTP = async (email, name) => {

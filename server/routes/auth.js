@@ -1,21 +1,38 @@
 import express from 'express';
 import jwt from 'jsonwebtoken';
+import mongoose from 'mongoose';
 import User from '../models/User.js';
 import Otp from '../models/Otp.js';
 import authMiddleware from '../middleware/auth.js';
+import { JWT_SECRET } from '../config.js';
+import { sendOTPEmail } from '../utils/email.js';
 
 const router = express.Router();
-const JWT_SECRET = process.env.JWT_SECRET || 'your-secret-key-change-in-production';
 
 // Generate JWT token (returns { id: userId } for compatibility)
 const generateToken = (userId) => {
-  return jwt.sign({ id: userId, userId }, JWT_SECRET, { expiresIn: '7d' });
+  if (!userId) {
+    throw new Error('User ID is required to generate token');
+  }
+  
+  // Ensure userId is a string (MongoDB ObjectId needs conversion)
+  const userIdStr = userId.toString();
+  
+  const token = jwt.sign({ id: userIdStr, userId: userIdStr }, JWT_SECRET, { expiresIn: '7d' });
+  
+  if (process.env.NODE_ENV === 'development') {
+    console.log(`🔑 Token generated for user: ${userIdStr}`);
+  }
+  
+  return token;
 };
 
 // Register with password
 router.post('/register', async (req, res) => {
   try {
     const { name, email, password } = req.body;
+
+    console.log('📝 Register request received:', { name, email, password: '***' });
 
     if (!name || !email || !password) {
       return res.status(400).json({ message: 'All fields are required' });
@@ -25,15 +42,28 @@ router.post('/register', async (req, res) => {
       return res.status(400).json({ message: 'Password must be at least 6 characters' });
     }
 
+    // Check MongoDB connection
+    if (mongoose.connection.readyState !== 1) {
+      console.error('❌ MongoDB not connected. State:', mongoose.connection.readyState);
+      return res.status(503).json({ 
+        message: 'Database not available',
+        error: 'Cannot connect to database. Please check MongoDB connection.'
+      });
+    }
+
     // Check if user exists
+    console.log('🔍 Checking for existing user...');
     const existingUser = await User.findOne({ email });
     if (existingUser) {
+      console.log('⚠️  User already exists:', email);
       return res.status(400).json({ message: 'User already exists' });
     }
 
     // Create user
+    console.log('➕ Creating new user...');
     const user = new User({ name, email, password });
     await user.save();
+    console.log('✅ User saved to database:', user._id);
 
     // Generate token
     const token = generateToken(user._id);
@@ -48,8 +78,24 @@ router.post('/register', async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Register error:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    console.error('❌ Register error:', error);
+    console.error('Error details:', {
+      name: error.name,
+      message: error.message,
+      code: error.code,
+      stack: error.stack
+    });
+    
+    // Handle specific MongoDB errors
+    if (error.name === 'MongoServerError' && error.code === 11000) {
+      return res.status(400).json({ message: 'Email already exists' });
+    }
+    
+    res.status(500).json({ 
+      message: 'Server error', 
+      error: error.message,
+      ...(process.env.NODE_ENV === 'development' && { details: error.stack })
+    });
   }
 });
 
@@ -60,6 +106,14 @@ router.post('/login', async (req, res) => {
 
     if (!email || !password) {
       return res.status(400).json({ message: 'Email and password are required' });
+    }
+
+    // Check MongoDB connection
+    if (mongoose.connection.readyState !== 1) {
+      return res.status(503).json({ 
+        message: 'Database not available',
+        error: 'Cannot connect to database. Please check MongoDB connection.'
+      });
     }
 
     // Find user
@@ -99,10 +153,18 @@ router.post('/login', async (req, res) => {
 // Generate OTP
 router.post('/otp/generate', async (req, res) => {
   try {
-    const { email, name } = req.body;
+    const { email } = req.body;
 
     if (!email) {
       return res.status(400).json({ message: 'Email is required' });
+    }
+
+    // Check MongoDB connection
+    if (mongoose.connection.readyState !== 1) {
+      return res.status(503).json({ 
+        message: 'Database not available',
+        error: 'Cannot connect to database. Please check MongoDB connection.'
+      });
     }
 
     // Generate 6-digit OTP
@@ -116,13 +178,26 @@ router.post('/otp/generate', async (req, res) => {
     });
     await otpRecord.save();
 
-    // In production, send OTP via email/SMS service
-    // For now, we'll return it (remove this in production!)
-    console.log(`OTP for ${email}: ${otp}`);
+    // Send OTP via email
+    console.log(`📧 Sending OTP to ${email}...`);
+    const emailResult = await sendOTPEmail(email, otp);
+    
+    if (emailResult.success) {
+      console.log('✅ OTP email sent successfully');
+      if (emailResult.previewUrl) {
+        console.log('📧 Preview URL:', emailResult.previewUrl);
+      }
+    } else {
+      console.warn('⚠️  Failed to send email, but OTP is saved:', emailResult.error);
+      // Still return success, but include OTP in dev mode as fallback
+    }
 
     res.json({
-      message: 'OTP generated successfully',
-      otp: process.env.NODE_ENV === 'development' ? otp : undefined, // Only return in dev
+      message: emailResult.success 
+        ? 'OTP sent to your email' 
+        : 'OTP generated (email sending failed, check server logs)',
+      otp: (!emailResult.success || process.env.NODE_ENV === 'development') ? otp : undefined, // Return OTP if email failed or in dev
+      previewUrl: emailResult.previewUrl, // Include preview URL if using Ethereal
       expiresIn: 600 // seconds
     });
   } catch (error) {
@@ -136,8 +211,18 @@ router.post('/otp/verify', async (req, res) => {
   try {
     const { email, otp, name } = req.body;
 
+    console.log('📝 OTP verification request:', { email, otp: '***', hasName: !!name });
+
     if (!email || !otp) {
       return res.status(400).json({ message: 'Email and OTP are required' });
+    }
+
+    // Check MongoDB connection
+    if (mongoose.connection.readyState !== 1) {
+      return res.status(503).json({ 
+        message: 'Database not available',
+        error: 'Cannot connect to database. Please check MongoDB connection.'
+      });
     }
 
     // Find valid OTP
@@ -149,12 +234,14 @@ router.post('/otp/verify', async (req, res) => {
     });
 
     if (!otpRecord) {
+      console.warn('⚠️  Invalid or expired OTP for:', email);
       return res.status(400).json({ message: 'Invalid or expired OTP' });
     }
 
     // Mark OTP as used
     otpRecord.used = true;
     await otpRecord.save();
+    console.log('✅ OTP verified and marked as used');
 
     // Find or create user
     let user = await User.findOne({ email });
@@ -164,12 +251,17 @@ router.post('/otp/verify', async (req, res) => {
       if (!name) {
         return res.status(400).json({ message: 'Name is required for registration' });
       }
+      console.log('➕ Creating new user with OTP:', email);
       user = new User({ name, email, otpOnly: true });
       await user.save();
+      console.log('✅ New user created:', user._id);
+    } else {
+      console.log('✅ Existing user found:', user._id);
     }
 
     // Generate token
     const token = generateToken(user._id);
+    console.log('🔑 Token generated for OTP login');
 
     res.json({
       message: 'OTP verified successfully',
@@ -181,14 +273,31 @@ router.post('/otp/verify', async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('OTP verification error:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    console.error('❌ OTP verification error:', error);
+    console.error('Error details:', {
+      name: error.name,
+      message: error.message,
+      stack: error.stack
+    });
+    res.status(500).json({ 
+      message: 'Server error', 
+      error: error.message,
+      ...(process.env.NODE_ENV === 'development' && { details: error.stack })
+    });
   }
 });
 
 // Get current user
 router.get('/me', authMiddleware, async (req, res) => {
   try {
+    // Check MongoDB connection
+    if (mongoose.connection.readyState !== 1) {
+      return res.status(503).json({ 
+        message: 'Database not available',
+        error: 'Cannot connect to database. Please check MongoDB connection.'
+      });
+    }
+
     const user = await User.findById(req.userId).select('-password');
     if (!user) {
       return res.status(404).json({ message: 'User not found' });

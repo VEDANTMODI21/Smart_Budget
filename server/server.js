@@ -4,6 +4,8 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import mongoose from 'mongoose';
+import nodemailer from 'nodemailer';
+import crypto from 'crypto';
 
 dotenv.config();
 
@@ -31,6 +33,58 @@ const userSchema = new mongoose.Schema({
 });
 
 const User = mongoose.model('User', userSchema);
+
+// OTP Schema
+const otpSchema = new mongoose.Schema({
+  email: String,
+  otp: String,
+  expiresAt: { type: Date, default: () => new Date(Date.now() + 10 * 60 * 1000) }
+});
+
+const OTP = mongoose.model('OTP', otpSchema);
+
+// Email configuration
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
+  }
+});
+
+// Function to generate OTP
+function generateOTP() {
+  return Math.floor(100000 + Math.random() * 900000).toString();
+}
+
+// Function to send OTP email
+async function sendOTPEmail(email, otp) {
+  try {
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: 'Smart Budget - Your OTP Code',
+      html: `
+        <div style="font-family: Arial, sans-serif; padding: 20px;">
+          <h2>Smart Budget OTP Verification</h2>
+          <p>Your One-Time Password (OTP) is:</p>
+          <h1 style="color: #007bff; letter-spacing: 5px;">${otp}</h1>
+          <p>This OTP will expire in 10 minutes.</p>
+          <p><strong>Do not share this OTP with anyone.</strong></p>
+          <hr/>
+          <p style="color: #666; font-size: 12px;">If you didn't request this OTP, please ignore this email.</p>
+        </div>
+      `
+    };
+
+    await transporter.sendMail(mailOptions);
+    console.log(`✅ OTP sent to ${email}`);
+    return true;
+  } catch (error) {
+    console.log('❌ Email error:', error.message);
+    return false;
+  }
+}
 
 // Routes
 app.get('/api/health', (req, res) => {
@@ -102,14 +156,47 @@ app.post('/api/auth/login', async (req, res) => {
 app.post('/api/auth/send-otp', async (req, res) => {
   try {
     const { email } = req.body;
+    
     if (!email) {
-      return res.status(400).json({ success: false, error: 'Email required' });
+      return res.status(400).json({ 
+        success: false,
+        error: 'Email required' 
+      });
     }
-    res.json({
-      success: true,
-      message: 'OTP sent to ' + email,
-      mockOTP: '123456'
-    });
+
+    // Check if email exists (for login flow)
+    const user = await User.findOne({ email });
+    if (!user) {
+      return res.status(400).json({ 
+        success: false,
+        error: 'Email not found. Please sign up first.' 
+      });
+    }
+
+    // Generate OTP
+    const otp = generateOTP();
+
+    // Delete old OTP for this email
+    await OTP.deleteMany({ email });
+
+    // Save new OTP to database
+    const otpRecord = new OTP({ email, otp });
+    await otpRecord.save();
+
+    // Send OTP to user's email
+    const emailSent = await sendOTPEmail(email, otp);
+
+    if (emailSent) {
+      res.json({
+        success: true,
+        message: `OTP sent to ${email}. Check your email.`
+      });
+    } else {
+      res.status(500).json({
+        success: false,
+        error: 'Failed to send OTP. Please try again.'
+      });
+    }
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
@@ -118,32 +205,66 @@ app.post('/api/auth/send-otp', async (req, res) => {
 app.post('/api/auth/verify-otp', async (req, res) => {
   try {
     const { email, otp } = req.body;
+    
     if (!email || !otp) {
-      return res.status(400).json({ success: false, error: 'Email and OTP required' });
+      return res.status(400).json({ 
+        success: false,
+        error: 'Email and OTP required' 
+      });
     }
+
+    // Find OTP record
+    const otpRecord = await OTP.findOne({ email, otp });
+
+    if (!otpRecord) {
+      return res.status(400).json({ 
+        success: false,
+        error: 'Invalid OTP' 
+      });
+    }
+
+    // Check if OTP expired
+    if (new Date() > otpRecord.expiresAt) {
+      await OTP.deleteOne({ _id: otpRecord._id });
+      return res.status(400).json({ 
+        success: false,
+        error: 'OTP expired. Please request a new one.' 
+      });
+    }
+
+    // OTP is valid, delete it
+    await OTP.deleteOne({ _id: otpRecord._id });
+
+    // Get user
+    const user = await User.findOne({ email });
+
     res.json({
       success: true,
-      message: 'OTP verified',
+      message: 'OTP verified successfully',
       token: 'token_' + Date.now(),
-      user: { id: '1', email: email, fullName: 'User' }
+      user: { 
+        id: user._id, 
+        fullName: user.fullName, 
+        email: user.email 
+      }
     });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
 });
 
-// Serve static files from parent dist folder
+// Serve static files (after npm run build)
 const distPath = path.join(__dirname, '..', 'dist');
 app.use(express.static(distPath));
 
-// Fallback to index.html for client-side routing
+// Fallback to index.html
 app.get('*', (req, res) => {
   res.sendFile(path.join(distPath, 'index.html'));
 });
 
 // Listen on 0.0.0.0 to accept network connections
 app.listen(PORT, '0.0.0.0', () => {
-  const os = require('os');
+  const os = await import('os');
   const networkInterfaces = os.networkInterfaces();
   let ipAddress = 'localhost';
   
@@ -157,6 +278,6 @@ app.listen(PORT, '0.0.0.0', () => {
   }
   
   console.log(`✅ Server running on http://${ipAddress}:${PORT}`);
-  console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
+  console.log(`📧 Email: ${process.env.EMAIL_USER}`);
   console.log(`🔗 Network access: http://${ipAddress}:${PORT}`);
 });

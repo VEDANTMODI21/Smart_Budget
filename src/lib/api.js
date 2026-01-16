@@ -1,5 +1,35 @@
 // API Configuration
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+// Auto-detect API URL: use environment variable, or try to detect from current host
+const getApiUrl = () => {
+  if (import.meta.env.VITE_API_URL) {
+    // If VITE_API_URL is set, use it (should include /api)
+    return import.meta.env.VITE_API_URL.endsWith('/api') 
+      ? import.meta.env.VITE_API_URL 
+      : `${import.meta.env.VITE_API_URL}/api`;
+  }
+  
+  // If running on network, use current hostname
+  const hostname = window.location.hostname;
+  const protocol = window.location.protocol;
+  
+  // Check if we're on localhost - use Vite proxy (relative URL)
+  // This works when running through Vite dev server (npm run dev)
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    // Use relative URL to leverage Vite proxy
+    // Vite proxy forwards /api/* to http://localhost:5000/api/*
+    return '/api';
+  }
+  
+  // For network access, use absolute URL
+  return `${protocol}//${hostname}:5000/api`;
+};
+
+const API_URL = getApiUrl();
+
+// Debug: Log API URL in development
+if (import.meta.env.DEV) {
+  console.log('🔗 API URL:', API_URL);
+}
 
 // Helper function to get auth token
 const getToken = () => {
@@ -21,16 +51,48 @@ const apiRequest = async (endpoint, options = {}) => {
   };
 
   try {
-    const response = await fetch(`${API_URL}${endpoint}`, config);
-    const data = await response.json();
+    const fullUrl = `${API_URL}${endpoint}`;
+    
+    // Debug logging in development
+    if (import.meta.env.DEV) {
+      console.log(`🌐 API Request: ${options.method || 'GET'} ${fullUrl}`);
+      if (token) {
+        console.log(`🔑 Token present: ${token.substring(0, 20)}...`);
+      } else {
+        console.warn('⚠️  No token in request');
+      }
+    }
+    
+    const response = await fetch(fullUrl, config);
+    
+    // Handle non-JSON responses
+    let data;
+    const contentType = response.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+      data = await response.json();
+    } else {
+      const text = await response.text();
+      console.error('❌ Non-JSON response:', text);
+      throw new Error(text || 'Request failed');
+    }
 
     if (!response.ok) {
-      throw new Error(data.message || 'Request failed');
+      // Log error details in development
+      if (import.meta.env.DEV) {
+        console.error(`❌ API Error ${response.status}:`, data);
+      }
+      throw new Error(data.message || data.error || `Request failed with status ${response.status}`);
     }
 
     return data;
   } catch (error) {
     console.error('API Error:', error);
+    
+    // Handle network errors
+    if (error instanceof TypeError && error.message.includes('fetch')) {
+      throw new Error('Unable to connect to server. Make sure the backend is running and accessible.');
+    }
+    
     throw error;
   }
 };

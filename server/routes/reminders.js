@@ -1,4 +1,5 @@
 import express from 'express';
+import mongoose from 'mongoose';
 import Reminder from '../models/Reminder.js';
 import authMiddleware from '../middleware/auth.js';
 
@@ -44,6 +45,11 @@ router.post('/', authMiddleware, async (req, res) => {
 // Update reminder
 router.put('/:id', authMiddleware, async (req, res) => {
   try {
+    // Validate ObjectId
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: 'Invalid reminder ID' });
+    }
+
     const reminder = await Reminder.findOne({
       _id: req.params.id,
       userId: req.userId
@@ -70,6 +76,11 @@ router.put('/:id', authMiddleware, async (req, res) => {
 // Delete reminder
 router.delete('/:id', authMiddleware, async (req, res) => {
   try {
+    // Validate ObjectId
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: 'Invalid reminder ID' });
+    }
+
     const reminder = await Reminder.findOneAndDelete({
       _id: req.params.id,
       userId: req.userId

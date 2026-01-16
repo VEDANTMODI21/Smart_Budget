@@ -1,4 +1,5 @@
 import express from 'express';
+import mongoose from 'mongoose';
 import Expense from '../models/Expense.js';
 import authMiddleware from '../middleware/auth.js';
 
@@ -45,6 +46,11 @@ router.post('/', authMiddleware, async (req, res) => {
 // Update expense
 router.put('/:id', authMiddleware, async (req, res) => {
   try {
+    // Validate ObjectId
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: 'Invalid expense ID' });
+    }
+
     const { title, amount, category, date, description } = req.body;
     
     const expense = await Expense.findOne({
@@ -73,6 +79,11 @@ router.put('/:id', authMiddleware, async (req, res) => {
 // Delete expense
 router.delete('/:id', authMiddleware, async (req, res) => {
   try {
+    // Validate ObjectId
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: 'Invalid expense ID' });
+    }
+
     const expense = await Expense.findOneAndDelete({
       _id: req.params.id,
       userId: req.userId

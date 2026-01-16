@@ -1,13 +1,7 @@
 # Dependencies
 node_modules/
-/.pnp
-.pnp.js
-
-# Testing
-/coverage
 
 # Production
-/build
 /dist
 
 # Misc
@@ -37,4 +31,3 @@ logs
 .cursor/debug.log
 
 .cursor
-dist/

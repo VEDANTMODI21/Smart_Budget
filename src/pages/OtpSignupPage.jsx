@@ -29,10 +29,16 @@ export default function OtpSignupPage() {
     try {
       const response = await generateOTPAPI(email, name);
 
-      if (response.otp) {
-        alert(`Your OTP is: ${response.otp}\n\n(In production, this would be sent to your email)`);
+      // Show appropriate message based on response
+      if (response.previewUrl) {
+        // Using Ethereal (testing) - show preview URL
+        alert(`OTP sent! Check your email.\n\nPreview URL (for testing):\n${response.previewUrl}\n\nOTP: ${response.otp}`);
+      } else if (response.otp) {
+        // Email failed or dev mode - show OTP
+        alert(`OTP: ${response.otp}\n\n${response.message || 'Check your email for the OTP.'}`);
       } else {
-        alert('OTP sent! Check your email.');
+        // Email sent successfully
+        alert('OTP sent! Please check your email inbox (and spam folder).');
       }
       
       setStep('otp');
@@ -52,12 +58,19 @@ export default function OtpSignupPage() {
       return;
     }
 
+    if (otp.length !== 6) {
+      setError('OTP must be 6 digits');
+      return;
+    }
+
     setLoading(true);
 
     try {
-      await loginWithOTP(email, otp, name);
+      const response = await loginWithOTP(email, otp, name);
+      console.log('✅ OTP signup successful:', response);
       navigate('/dashboard');
     } catch (err) {
+      console.error('❌ OTP verification failed:', err);
       setError(err.message || 'Verification failed. Please try again.');
     } finally {
       setLoading(false);

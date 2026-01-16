@@ -1,4 +1,5 @@
 import express from 'express';
+import mongoose from 'mongoose';
 import Settlement from '../models/Settlement.js';
 import authMiddleware from '../middleware/auth.js';
 
@@ -44,6 +45,11 @@ router.post('/', authMiddleware, async (req, res) => {
 // Update settlement
 router.put('/:id', authMiddleware, async (req, res) => {
   try {
+    // Validate ObjectId
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: 'Invalid settlement ID' });
+    }
+
     const settlement = await Settlement.findOne({
       _id: req.params.id,
       userId: req.userId
@@ -69,6 +75,11 @@ router.put('/:id', authMiddleware, async (req, res) => {
 // Delete settlement
 router.delete('/:id', authMiddleware, async (req, res) => {
   try {
+    // Validate ObjectId
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(400).json({ message: 'Invalid settlement ID' });
+    }
+
     const settlement = await Settlement.findOneAndDelete({
       _id: req.params.id,
       userId: req.userId
