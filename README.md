@@ -38,17 +38,6 @@ npm install
 2. Configure Environment Variables
 Create a .env file in the root directory:
 
-env
-Copy code
-PORT=5000
-NODE_ENV=development
-
-MONGODB_URI=<your-mongodb-connection-string>
-JWT_SECRET=<your-jwt-secret>
-
-FRONTEND_URL=http://localhost:5173
-# NETWORK_IP=<your-local-ip> (optional)
-⚠️ Do NOT commit .env to GitHub.
 
 3. Start MongoDB
 Local MongoDB
@@ -121,3 +110,46 @@ DELETE /api/reminders/:id
 
 License
 MIT
+
+# Smart Budget App
+
+## Setup Instructions
+
+1. **Clone the repository**
+   ```bash
+   git clone <repo-url>
+   cd Smart_Budget
+   npm install
+   ```
+
+2. **Create `.env` file** (copy from `.env.example`)
+   ```bash
+   cp .env.example .env
+   ```
+
+3. **Configure your email** in `.env`:
+   - Go to https://myaccount.google.com/security
+   - Enable 2-factor authentication
+   - Generate "App Password" for Mail
+   - Copy the 16-character password
+   - Paste into `.env`:
+     ```
+     EMAIL_USER=your-email@gmail.com
+     EMAIL_PASS=your-16-char-password
+     ```
+
+4. **Start MongoDB** (if using local)
+   ```bash
+   mongod
+   ```
+
+5. **Run the app**
+   ```bash
+   npm run dev:all
+   ```
+
+## How It Works
+- Each user has their own `.env` file (NOT committed to git)
+- OTP emails are sent from the user's configured email
+- Your `.env` is private and only on your machine
+- Other users create their own `.env` with their email credentials

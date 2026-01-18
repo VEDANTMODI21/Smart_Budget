@@ -6,6 +6,7 @@ import { fileURLToPath } from 'url';
 import mongoose from 'mongoose';
 import nodemailer from 'nodemailer';
 import crypto from 'crypto';
+import os from 'os';
 
 dotenv.config();
 
@@ -174,7 +175,7 @@ app.post('/api/auth/send-otp', async (req, res) => {
     }
 
     // Generate OTP
-    const otp = generateOTP();
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
     // Delete old OTP for this email
     await OTP.deleteMany({ email });
@@ -184,19 +185,37 @@ app.post('/api/auth/send-otp', async (req, res) => {
     await otpRecord.save();
 
     // Send OTP to user's email
-    const emailSent = await sendOTPEmail(email, otp);
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: 'Smart Budget - Your OTP Code',
+      html: `
+        <div style="font-family: Arial, sans-serif; padding: 20px;">
+          <h2>Smart Budget OTP Verification</h2>
+          <p>Your One-Time Password (OTP) is:</p>
+          <h1 style="color: #007bff; letter-spacing: 5px;">${otp}</h1>
+          <p>This OTP will expire in 10 minutes.</p>
+          <p><strong>Do not share this OTP with anyone.</strong></p>
+          <hr/>
+          <p style="color: #666; font-size: 12px;">If you didn't request this OTP, please ignore this email.</p>
+        </div>
+      `
+    };
 
-    if (emailSent) {
+    transporter.sendMail(mailOptions, (error, info) => {
+      if (error) {
+        console.log('❌ Email error:', error.message);
+        return res.status(500).json({
+          success: false,
+          error: 'Failed to send OTP email. Check your email configuration.'
+        });
+      }
+      console.log(`✅ OTP sent to ${email}`);
       res.json({
         success: true,
         message: `OTP sent to ${email}. Check your email.`
       });
-    } else {
-      res.status(500).json({
-        success: false,
-        error: 'Failed to send OTP. Please try again.'
-      });
-    }
+    });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
@@ -264,7 +283,6 @@ app.get('*', (req, res) => {
 
 // Listen on 0.0.0.0 to accept network connections
 app.listen(PORT, '0.0.0.0', () => {
-  const os = await import('os');
   const networkInterfaces = os.networkInterfaces();
   let ipAddress = 'localhost';
   

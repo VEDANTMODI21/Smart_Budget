@@ -124,4 +124,3 @@ export default function ExpenseForm({ onSubmit, onCancel }) {
     </div>
   );
 }
-
