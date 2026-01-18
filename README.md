@@ -127,23 +127,12 @@ MIT
    cp .env.example .env
    ```
 
-3. **Configure your email** in `.env`:
-   - Go to https://myaccount.google.com/security
-   - Enable 2-factor authentication
-   - Generate "App Password" for Mail
-   - Copy the 16-character password
-   - Paste into `.env`:
-     ```
-     EMAIL_USER=your-email@gmail.com
-     EMAIL_PASS=your-16-char-password
-     ```
-
-4. **Start MongoDB** (if using local)
+3. **Start MongoDB** (if using local)
    ```bash
    mongod
    ```
 
-5. **Run the app**
+4. **Run the app**
    ```bash
    npm run dev:all
    ```
