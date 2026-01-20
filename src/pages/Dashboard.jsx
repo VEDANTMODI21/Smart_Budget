@@ -3,7 +3,7 @@ import { Helmet } from 'react-helmet';
 import { motion } from 'framer-motion';
 import { DollarSign, Users, AlertCircle, TrendingUp } from 'lucide-react';
 import { useAuth } from '@/Contexts/AuthContext';
-import { supabase } from '@/lib/customSupabaseClient';
+import { expensesAPI, settlementsAPI, remindersAPI } from '@/lib/api';
 import Header from '@/components/Header';
 
 const Dashboard = () => {
@@ -89,21 +89,17 @@ const Dashboard = () => {
 
       try {
         setLoadingReminders(true);
-        const { data: userReminders, error } = await supabase
-          .from('reminders')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('date', { ascending: true })
-          .order('time', { ascending: true });
+        const userReminders = await remindersAPI.getAll();
 
-        if (error) throw error;
-
-        // Filter out past reminders and sort by upcoming
+        // Filter reminders for the user and upcoming ones
         const now = new Date();
-        const upcomingReminders = userReminders?.filter(reminder => {
-          const reminderDateTime = new Date(`${reminder.date}T${reminder.time}`);
-          return reminderDateTime >= now;
-        }) || [];
+        const upcomingReminders = userReminders
+          .filter(reminder => reminder.user_id === user.id)
+          .filter(reminder => {
+            const reminderDateTime = new Date(`${reminder.date}T${reminder.time}`);
+            return reminderDateTime >= now;
+          })
+          .sort((a, b) => new Date(`${a.date}T${a.time}`) - new Date(`${b.date}T${b.time}`));
 
         setReminders(upcomingReminders);
       } catch (error) {

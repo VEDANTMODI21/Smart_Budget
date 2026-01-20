@@ -1,8 +1,12 @@
 import { useState, useEffect } from 'react';
+import { useAuth } from '@/Contexts/AuthContext';
+import { expensesAPI } from '@/lib/api';
 
 export default function ExpenseTracker() {
+  const { user } = useAuth();
   const [expenses, setExpenses] = useState([]);
   const [formData, setFormData] = useState({
+    title: '',
     description: '',
     amount: '',
     category: 'Food',
@@ -12,23 +16,16 @@ export default function ExpenseTracker() {
 
   // Load expenses on mount
   useEffect(() => {
-    console.log('Component mounted, loading expenses...');
-    loadExpenses();
-  }, []);
+    if (user) {
+      loadExpenses();
+    }
+  }, [user]);
 
-  const loadExpenses = () => {
+  const loadExpenses = async () => {
     try {
       setLoading(true);
-      const saved = localStorage.getItem('expenses');
-      console.log('Saved data from localStorage:', saved);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        console.log('Parsed expenses:', parsed);
-        setExpenses(parsed);
-      } else {
-        console.log('No expenses in localStorage yet');
-        setExpenses([]);
-      }
+      const data = await expensesAPI.getAll();
+      setExpenses(data);
     } catch (error) {
       console.error('Error loading expenses:', error);
       setExpenses([]);
@@ -83,11 +80,14 @@ export default function ExpenseTracker() {
     });
   };
 
-  const handleDeleteExpense = (id) => {
-    console.log('Deleting expense:', id);
-    const updatedExpenses = expenses.filter(expense => expense.id !== id);
-    setExpenses(updatedExpenses);
-    localStorage.setItem('expenses', JSON.stringify(updatedExpenses));
+  const handleDeleteExpense = async (id) => {
+    try {
+      await expensesAPI.delete(id);
+      setExpenses(expenses.filter(expense => expense._id !== id));
+    } catch (error) {
+      console.error('Error deleting expense:', error);
+      alert('Failed to delete expense');
+    }
   };
 
   const totalExpense = expenses.reduce((sum, expense) => sum + expense.amount, 0);
@@ -102,6 +102,19 @@ export default function ExpenseTracker() {
         {/* Form Section */}
         <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
           <form onSubmit={handleAddExpense} className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Title
+              </label>
+              <input
+                type="text"
+                name="title"
+                value={formData.title}
+                onChange={handleInputChange}
+                placeholder="Enter expense title"
+                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+              />
+            </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">
                 Description
@@ -195,21 +208,24 @@ export default function ExpenseTracker() {
             <div className="space-y-2">
               {expenses.map((expense) => (
                 <div
-                  key={expense.id}
+                  key={expense._id}
                   className="flex justify-between items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition"
                 >
                   <div className="flex-1">
-                    <p className="font-semibold text-gray-800">{expense.description}</p>
+                    <p className="font-semibold text-gray-800">{expense.title}</p>
                     <p className="text-sm text-gray-600">
-                      {expense.category} • {expense.date}
+                      {expense.category} • {new Date(expense.date).toLocaleDateString()}
                     </p>
+                    {expense.description && (
+                      <p className="text-sm text-gray-500">{expense.description}</p>
+                    )}
                   </div>
                   <div className="flex items-center gap-4">
                     <p className="text-lg font-bold text-blue-600">
                       ${parseFloat(expense.amount).toFixed(2)}
                     </p>
                     <button
-                      onClick={() => handleDeleteExpense(expense.id)}
+                      onClick={() => handleDeleteExpense(expense._id)}
                       className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded transition"
                     >
                       Delete
