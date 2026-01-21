@@ -1,7 +1,6 @@
 import React from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import { AuthProvider } from '@/Contexts/AuthContext';
-import { OtpProvider } from '@/Contexts/OtpContext';
 import { Toaster } from '@/components/ui/toaster';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import LoginPage from '@/pages/LoginPage';
@@ -18,63 +17,61 @@ import SharedExpenseView from '@/pages/SharedExpenseView';
 function App() {
   return (
     <AuthProvider>
-      <OtpProvider>
-        <Router>
-          <Routes>
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            {/* Redirects for legacy routes */}
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/signup" element={<SignupPage />} />
+      <Router>
+        <Routes>
+          <Route path="/" element={<Navigate to="/dashboard" replace />} />
+          {/* Redirects for legacy routes */}
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/signup" element={<SignupPage />} />
 
-            {/* New OTP Routes */}
-            <Route path="/otp-login" element={<OtpLoginPage />} />
-            <Route path="/otp-signup" element={<OtpSignupPage />} />
+          {/* New OTP Routes */}
+          <Route path="/otp-login" element={<OtpLoginPage />} />
+          <Route path="/otp-signup" element={<OtpSignupPage />} />
 
-            <Route
-              path="/dashboard"
-              element={
-                <ProtectedRoute>
-                  <Dashboard />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/expenses"
-              element={
-                <ProtectedRoute>
-                  <ExpenseList />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/settlements"
-              element={
-                <ProtectedRoute>
-                  <SettlementTracker />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/reminders"
-              element={
-                <ProtectedRoute>
-                  <ReminderNotification />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/export"
-              element={
-                <ProtectedRoute>
-                  <ExportFeature />
-                </ProtectedRoute>
-              }
-            />
-            <Route path="/share/:token" element={<SharedExpenseView />} />
-          </Routes>
-          <Toaster />
-        </Router>
-      </OtpProvider>
+          <Route
+            path="/dashboard"
+            element={
+              <ProtectedRoute>
+                <Dashboard />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/expenses"
+            element={
+              <ProtectedRoute>
+                <ExpenseList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/settlements"
+            element={
+              <ProtectedRoute>
+                <SettlementTracker />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/reminders"
+            element={
+              <ProtectedRoute>
+                <ReminderNotification />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/export"
+            element={
+              <ProtectedRoute>
+                <ExportFeature />
+              </ProtectedRoute>
+            }
+          />
+          <Route path="/share/:token" element={<SharedExpenseView />} />
+        </Routes>
+        <Toaster />
+      </Router>
     </AuthProvider>
   );
 }

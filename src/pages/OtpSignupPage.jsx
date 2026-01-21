@@ -18,7 +18,7 @@ export default function OtpSignupPage() {
   const handleSendOTP = async (e) => {
     e.preventDefault();
     setError('');
-    
+
     if (!name || !email) {
       setError('Please fill in all fields');
       return;
@@ -27,7 +27,7 @@ export default function OtpSignupPage() {
     setLoading(true);
 
     try {
-      const response = await generateOTPAPI(email, name);
+      const response = await generateOTPAPI(email);
 
       // Show appropriate message based on response
       if (response.previewUrl) {
@@ -40,7 +40,7 @@ export default function OtpSignupPage() {
         // Email sent successfully
         alert('OTP sent! Please check your email inbox (and spam folder).');
       }
-      
+
       setStep('otp');
     } catch (err) {
       setError(err.message || 'Failed to send OTP. Please try again.');
@@ -52,7 +52,7 @@ export default function OtpSignupPage() {
   const handleVerifyOTP = async (e) => {
     e.preventDefault();
     setError('');
-    
+
     if (!otp) {
       setError('Please enter the OTP');
       return;

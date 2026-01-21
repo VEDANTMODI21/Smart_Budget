@@ -12,7 +12,7 @@ export default function SignupPage() {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
-  const { register } = useAuth();
+  const { signup } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
@@ -37,7 +37,7 @@ export default function SignupPage() {
         return;
       }
 
-      await register(name, email, password);
+      await signup(name, email, password);
       navigate('/dashboard');
     } catch (err) {
       setError(err?.message || 'Signup failed. Please try again.');
