@@ -16,7 +16,7 @@ export default function ReminderNotification() {
 
   useEffect(() => {
     loadReminders();
-    
+
     // Check for due reminders every minute
     const checkReminders = setInterval(() => {
       const now = new Date();
@@ -49,7 +49,7 @@ export default function ReminderNotification() {
     try {
       const reminder = reminders.find(r => r._id === id);
       await remindersAPI.update(id, { ...reminder, notified: true });
-      setReminders(reminders.map(r => 
+      setReminders(reminders.map(r =>
         r._id === id ? { ...r, notified: true } : r
       ));
     } catch (err) {
@@ -102,16 +102,16 @@ export default function ReminderNotification() {
     });
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700">
       <Header />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Reminders</h1>
-          <p className="text-gray-600">Set reminders for important dates and tasks</p>
+          <h1 className="text-4xl font-bold text-white mb-2">Reminders</h1>
+          <p className="text-white/80">Set reminders for important dates and tasks</p>
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
+          <div className="bg-red-500/20 border border-red-300/50 text-white px-4 py-3 rounded-lg mb-4 backdrop-blur-xl">
             {error}
           </div>
         )}
@@ -123,8 +123,8 @@ export default function ReminderNotification() {
         </div>
 
         {showForm && (
-          <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Add Reminder</h2>
+          <div className="bg-white/10 backdrop-blur-xl rounded-2xl shadow-2xl p-6 mb-6 border border-white/20">
+            <h2 className="text-xl font-bold text-white mb-4">Add Reminder</h2>
             <div className="space-y-4">
               <Input
                 label="Title"
@@ -147,12 +147,12 @@ export default function ReminderNotification() {
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <label className="block text-sm font-medium text-white/90 mb-1">Description</label>
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   rows={3}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-white/50 text-white placeholder-white/50 backdrop-blur-xl"
                   placeholder="Additional details..."
                 />
               </div>
@@ -161,31 +161,31 @@ export default function ReminderNotification() {
           </div>
         )}
 
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900">
+        <div className="bg-white/10 backdrop-blur-xl rounded-2xl shadow-2xl overflow-hidden border border-white/20">
+          <div className="px-6 py-4 border-b border-white/20">
+            <h2 className="text-xl font-semibold text-white">
               Upcoming Reminders ({upcomingReminders.length})
             </h2>
           </div>
           {loading ? (
             <div className="px-6 py-12 text-center">
-              <p className="text-gray-500">Loading reminders...</p>
+              <p className="text-white/80">Loading reminders...</p>
             </div>
           ) : upcomingReminders.length === 0 ? (
             <div className="px-6 py-12 text-center">
-              <p className="text-gray-500">No reminders set.</p>
+              <p className="text-white/80">No reminders set.</p>
             </div>
           ) : (
-            <div className="divide-y divide-gray-200">
+            <div className="divide-y divide-white/10">
               {upcomingReminders.map((reminder) => (
-                <div key={reminder._id} className="px-6 py-4 hover:bg-gray-50 flex justify-between items-center">
+                <div key={reminder._id} className="px-6 py-4 hover:bg-white/5 flex justify-between items-center transition-all">
                   <div className="flex-1">
-                    <h3 className="text-lg font-medium text-gray-900">{reminder.title}</h3>
-                    <p className="text-sm text-gray-500 mt-1">
+                    <h3 className="text-lg font-medium text-white">{reminder.title}</h3>
+                    <p className="text-sm text-white/70 mt-1">
                       {new Date(reminder.date).toLocaleDateString()} at {reminder.time}
                     </p>
                     {reminder.description && (
-                      <p className="text-sm text-gray-600 mt-1">{reminder.description}</p>
+                      <p className="text-sm text-white/60 mt-1">{reminder.description}</p>
                     )}
                   </div>
                   <Button variant="danger" onClick={() => handleDelete(reminder._id)}>

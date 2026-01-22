@@ -59,7 +59,7 @@ export default function SettlementTracker() {
     try {
       const settlement = settlements.find(s => s._id === id);
       await settlementsAPI.update(id, { ...settlement, settled: true });
-      setSettlements(settlements.map(s => 
+      setSettlements(settlements.map(s =>
         s._id === id ? { ...s, settled: true } : s
       ));
     } catch (err) {
@@ -83,23 +83,23 @@ export default function SettlementTracker() {
     .reduce((sum, s) => sum + parseFloat(s.amount || 0), 0);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700">
       <Header />
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Settlement Tracker</h1>
-          <p className="text-gray-600">Track money owed to you</p>
+          <h1 className="text-4xl font-bold text-white mb-2">Settlement Tracker</h1>
+          <p className="text-white/80">Track money owed to you</p>
         </div>
 
         {error && (
-          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded mb-4">
+          <div className="bg-red-500/20 border border-red-300/50 text-white px-4 py-3 rounded-lg mb-4 backdrop-blur-xl">
             {error}
           </div>
         )}
 
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">
-            Total Owed: <span className="text-green-600">${totalOwed.toFixed(2)}</span>
+        <div className="bg-white/10 backdrop-blur-xl rounded-2xl shadow-2xl p-6 mb-6 border border-white/20">
+          <h2 className="text-xl font-semibold text-white mb-4">
+            Total Owed: <span className="text-green-400">${totalOwed.toFixed(2)}</span>
           </h2>
         </div>
 
@@ -110,8 +110,8 @@ export default function SettlementTracker() {
         </div>
 
         {showForm && (
-          <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-            <h2 className="text-xl font-bold text-gray-900 mb-4">Add Settlement</h2>
+          <div className="bg-white/10 backdrop-blur-xl rounded-2xl shadow-2xl p-6 mb-6 border border-white/20">
+            <h2 className="text-xl font-bold text-white mb-4">Add Settlement</h2>
             <div className="space-y-4">
               <Input
                 label="Person Name"
@@ -128,12 +128,12 @@ export default function SettlementTracker() {
                 placeholder="0.00"
               />
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                <label className="block text-sm font-medium text-white/90 mb-1">Description</label>
                 <textarea
                   value={description}
                   onChange={(e) => setDescription(e.target.value)}
                   rows={3}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg focus:outline-none focus:ring-2 focus:ring-white/50 text-white placeholder-white/50 backdrop-blur-xl"
                   placeholder="What is this for?"
                 />
               </div>
@@ -142,43 +142,42 @@ export default function SettlementTracker() {
           </div>
         )}
 
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900">Settlements</h2>
+        <div className="bg-white/10 backdrop-blur-xl rounded-2xl shadow-2xl overflow-hidden border border-white/20">
+          <div className="px-6 py-4 border-b border-white/20">
+            <h2 className="text-xl font-semibold text-white">Settlements</h2>
           </div>
           {loading ? (
             <div className="px-6 py-12 text-center">
-              <p className="text-gray-500">Loading settlements...</p>
+              <p className="text-white/80">Loading settlements...</p>
             </div>
           ) : settlements.length === 0 ? (
             <div className="px-6 py-12 text-center">
-              <p className="text-gray-500">No settlements tracked yet.</p>
+              <p className="text-white/80">No settlements tracked yet.</p>
             </div>
           ) : (
-            <div className="divide-y divide-gray-200">
+            <div className="divide-y divide-white/10">
               {settlements.map((settlement) => (
                 <div
                   key={settlement._id}
-                  className={`px-6 py-4 hover:bg-gray-50 flex justify-between items-center ${
-                    settlement.settled ? 'opacity-60' : ''
-                  }`}
+                  className={`px-6 py-4 hover:bg-white/5 flex justify-between items-center transition-all ${settlement.settled ? 'opacity-60' : ''
+                    }`}
                 >
                   <div className="flex-1">
                     <div className="flex items-center space-x-3">
-                      <h3 className="text-lg font-medium text-gray-900">{settlement.person}</h3>
+                      <h3 className="text-lg font-medium text-white">{settlement.person}</h3>
                       {settlement.settled && (
-                        <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded">
+                        <span className="px-2 py-1 bg-green-500/30 text-green-200 text-xs font-medium rounded border border-green-400/50">
                           Settled
                         </span>
                       )}
                     </div>
-                    <p className="text-sm text-gray-500 mt-1">{new Date(settlement.date).toLocaleDateString()}</p>
+                    <p className="text-sm text-white/70 mt-1">{new Date(settlement.date).toLocaleDateString()}</p>
                     {settlement.description && (
-                      <p className="text-sm text-gray-600 mt-1">{settlement.description}</p>
+                      <p className="text-sm text-white/60 mt-1">{settlement.description}</p>
                     )}
                   </div>
                   <div className="flex items-center space-x-4">
-                    <span className="text-xl font-bold text-green-600">
+                    <span className="text-xl font-bold text-green-400">
                       ${parseFloat(settlement.amount).toFixed(2)}
                     </span>
                     {!settlement.settled && (

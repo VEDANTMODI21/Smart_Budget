@@ -43,41 +43,42 @@ export default function ExpenseTracker() {
     }));
   };
 
-  const handleAddExpense = (e) => {
+  const handleAddExpense = async (e) => {
     e.preventDefault();
-    
-    if (!formData.description.trim() || !formData.amount.trim()) {
-      alert('Please fill in all fields');
+
+    if (!formData.title.trim() || !formData.amount.trim()) {
+      alert('Please fill in title and amount');
       return;
     }
 
-    const newExpense = {
-      id: Date.now(),
-      description: formData.description.trim(),
-      amount: parseFloat(formData.amount),
-      category: formData.category,
-      date: formData.date
-    };
+    try {
+      const newExpense = await expensesAPI.create({
+        title: formData.title.trim(),
+        description: formData.description.trim(),
+        amount: parseFloat(formData.amount),
+        category: formData.category,
+        date: formData.date
+      });
 
-    console.log('Adding expense:', newExpense);
+      console.log('Expense added successfully:', newExpense);
 
-    // Add to state
-    const updatedExpenses = [...expenses, newExpense];
-    console.log('Updated expenses list:', updatedExpenses);
-    
-    setExpenses(updatedExpenses);
-    
-    // Save to localStorage
-    localStorage.setItem('expenses', JSON.stringify(updatedExpenses));
-    console.log('Saved to localStorage');
-    
-    // Clear form
-    setFormData({
-      description: '',
-      amount: '',
-      category: 'Food',
-      date: new Date().toISOString().split('T')[0]
-    });
+      // Add to state
+      setExpenses([...expenses, newExpense]);
+
+      // Clear form
+      setFormData({
+        title: '',
+        description: '',
+        amount: '',
+        category: 'Food',
+        date: new Date().toISOString().split('T')[0]
+      });
+
+      alert('Expense added successfully!');
+    } catch (error) {
+      console.error('Error adding expense:', error);
+      alert('Failed to add expense: ' + error.message);
+    }
   };
 
   const handleDeleteExpense = async (id) => {
@@ -95,15 +96,15 @@ export default function ExpenseTracker() {
   console.log('Current expenses state:', expenses);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 p-8">
+    <div className="min-h-screen bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700 p-8">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-4xl font-bold text-gray-800 mb-8">Expense Tracker</h1>
+        <h1 className="text-4xl font-bold text-white mb-8">Expense Tracker</h1>
 
         {/* Form Section */}
-        <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
+        <div className="bg-white/10 backdrop-blur-xl rounded-2xl shadow-2xl p-6 mb-8 border border-white/20">
           <form onSubmit={handleAddExpense} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-white/90 mb-2">
                 Title
               </label>
               <input
@@ -112,11 +113,11 @@ export default function ExpenseTracker() {
                 value={formData.title}
                 onChange={handleInputChange}
                 placeholder="Enter expense title"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg focus:ring-2 focus:ring-white/50 focus:border-transparent outline-none text-white placeholder-white/50 backdrop-blur-xl"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
+              <label className="block text-sm font-medium text-white/90 mb-2">
                 Description
               </label>
               <input
@@ -125,13 +126,13 @@ export default function ExpenseTracker() {
                 value={formData.description}
                 onChange={handleInputChange}
                 placeholder="Enter expense description"
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg focus:ring-2 focus:ring-white/50 focus:border-transparent outline-none text-white placeholder-white/50 backdrop-blur-xl"
               />
             </div>
 
             <div className="grid grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-white/90 mb-2">
                   Amount
                 </label>
                 <input
@@ -141,30 +142,30 @@ export default function ExpenseTracker() {
                   onChange={handleInputChange}
                   placeholder="0.00"
                   step="0.01"
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                  className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg focus:ring-2 focus:ring-white/50 focus:border-transparent outline-none text-white placeholder-white/50 backdrop-blur-xl"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-white/90 mb-2">
                   Category
                 </label>
                 <select
                   name="category"
                   value={formData.category}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                  className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg focus:ring-2 focus:ring-white/50 focus:border-transparent outline-none text-white backdrop-blur-xl"
                 >
-                  <option value="Food">Food</option>
-                  <option value="Transport">Transport</option>
-                  <option value="Entertainment">Entertainment</option>
-                  <option value="Utilities">Utilities</option>
-                  <option value="Other">Other</option>
+                  <option value="Food" className="bg-gray-800">Food</option>
+                  <option value="Transport" className="bg-gray-800">Transport</option>
+                  <option value="Entertainment" className="bg-gray-800">Entertainment</option>
+                  <option value="Utilities" className="bg-gray-800">Utilities</option>
+                  <option value="Other" className="bg-gray-800">Other</option>
                 </select>
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="block text-sm font-medium text-white/90 mb-2">
                   Date
                 </label>
                 <input
@@ -172,14 +173,14 @@ export default function ExpenseTracker() {
                   name="date"
                   value={formData.date}
                   onChange={handleInputChange}
-                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none"
+                  className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg focus:ring-2 focus:ring-white/50 focus:border-transparent outline-none text-white backdrop-blur-xl"
                 />
               </div>
             </div>
 
             <button
               type="submit"
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200"
+              className="w-full bg-white/20 hover:bg-white/30 text-white font-bold py-2 px-4 rounded-lg transition duration-200 border border-white/30"
             >
               Add Expense
             </button>
@@ -187,46 +188,46 @@ export default function ExpenseTracker() {
         </div>
 
         {/* Summary Section */}
-        <div className="bg-white rounded-lg shadow-lg p-6 mb-8">
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">Summary</h2>
-          <div className="text-3xl font-bold text-blue-600">
+        <div className="bg-white/10 backdrop-blur-xl rounded-2xl shadow-2xl p-6 mb-8 border border-white/20">
+          <h2 className="text-2xl font-bold text-white mb-4">Summary</h2>
+          <div className="text-3xl font-bold text-green-400">
             Total: ${totalExpense.toFixed(2)}
           </div>
-          <p className="text-gray-600 mt-2">
+          <p className="text-white/80 mt-2">
             {expenses.length} expense{expenses.length !== 1 ? 's' : ''} recorded
           </p>
         </div>
 
         {/* Expenses List */}
-        <div className="bg-white rounded-lg shadow-lg p-6">
-          <h2 className="text-2xl font-bold text-gray-800 mb-4">Expenses List</h2>
+        <div className="bg-white/10 backdrop-blur-xl rounded-2xl shadow-2xl p-6 border border-white/20">
+          <h2 className="text-2xl font-bold text-white mb-4">Expenses List</h2>
           {loading ? (
-            <p className="text-center text-gray-500 py-8">Loading...</p>
+            <p className="text-center text-white/80 py-8">Loading...</p>
           ) : expenses.length === 0 ? (
-            <p className="text-gray-500 text-center py-8">No expenses added yet. Add one to get started!</p>
+            <p className="text-white/80 text-center py-8">No expenses added yet. Add one to get started!</p>
           ) : (
             <div className="space-y-2">
               {expenses.map((expense) => (
                 <div
                   key={expense._id}
-                  className="flex justify-between items-center p-4 bg-gray-50 rounded-lg hover:bg-gray-100 transition"
+                  className="flex justify-between items-center p-4 bg-white/5 rounded-lg hover:bg-white/10 transition-all"
                 >
                   <div className="flex-1">
-                    <p className="font-semibold text-gray-800">{expense.title}</p>
-                    <p className="text-sm text-gray-600">
+                    <p className="font-semibold text-white">{expense.title}</p>
+                    <p className="text-sm text-white/70">
                       {expense.category} • {new Date(expense.date).toLocaleDateString()}
                     </p>
                     {expense.description && (
-                      <p className="text-sm text-gray-500">{expense.description}</p>
+                      <p className="text-sm text-white/60">{expense.description}</p>
                     )}
                   </div>
                   <div className="flex items-center gap-4">
-                    <p className="text-lg font-bold text-blue-600">
+                    <p className="text-lg font-bold text-green-400">
                       ${parseFloat(expense.amount).toFixed(2)}
                     </p>
                     <button
                       onClick={() => handleDeleteExpense(expense._id)}
-                      className="bg-red-500 hover:bg-red-600 text-white px-3 py-1 rounded transition"
+                      className="bg-red-500/30 hover:bg-red-500/50 text-white px-3 py-1 rounded transition border border-red-400/50"
                     >
                       Delete
                     </button>
