@@ -31,7 +31,10 @@ export default function ReminderNotification() {
     const checkReminders = setInterval(() => {
       const now = new Date();
       reminders.forEach(reminder => {
-        const reminderDateTime = new Date(`${reminder.date}T${reminder.time}`);
+        // Fix logic: Ensure date is YYYY-MM-DD
+        const dateStr = typeof reminder.date === 'string' ? reminder.date.split('T')[0] : new Date(reminder.date).toISOString().split('T')[0];
+        const reminderDateTime = new Date(`${dateStr}T${reminder.time}`);
+
         if (reminderDateTime <= now && !reminder.notified) {
           // Use browser notification if permissible, otherwise alert
           if ("Notification" in window && Notification.permission === "granted") {
@@ -122,9 +125,9 @@ export default function ReminderNotification() {
   const upcomingReminders = reminders
     .filter(r => !r.notified)
     .sort((a, b) => {
-      const dateA = new Date(`${a.date}T${a.time}`);
-      const dateB = new Date(`${b.date}T${b.time}`);
-      return dateA - dateB;
+      const dateA = typeof a.date === 'string' ? a.date.split('T')[0] : new Date(a.date).toISOString().split('T')[0];
+      const dateB = typeof b.date === 'string' ? b.date.split('T')[0] : new Date(b.date).toISOString().split('T')[0];
+      return new Date(`${dateA}T${a.time}`) - new Date(`${dateB}T${b.time}`);
     });
 
   return (

@@ -1,7 +1,9 @@
 import React, { useState, useEffect } from 'react';
+import { motion } from 'framer-motion';
+import { Download, FileText, FileJson, Table } from 'lucide-react';
 import Header from '@/components/Header';
-import { Button } from '@/components/ui/button';
 import { expensesAPI } from '@/lib/api';
+import { Helmet } from 'react-helmet';
 
 export default function ExportFeature() {
   const [expenses, setExpenses] = useState([]);
@@ -136,50 +138,111 @@ export default function ExportFeature() {
   const totalExpenses = expenses.reduce((sum, exp) => sum + parseFloat(exp.amount || 0), 0);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100">
+    <div className="min-h-screen bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700">
+      <Helmet>
+        <title>Export Data - Smart Budget</title>
+      </Helmet>
+
       <Header />
+
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-gray-900 mb-2">Export Data</h1>
-          <p className="text-gray-600">Export your expenses data in various formats</p>
-        </div>
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="mb-8"
+        >
+          <h1 className="text-4xl font-bold text-white mb-2">Export Data</h1>
+          <p className="text-white/80">Download your financial data for offline analysis</p>
+        </motion.div>
 
-        <div className="bg-white rounded-lg shadow-md p-6 mb-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Summary</h2>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm text-gray-500">Total Expenses</p>
-              <p className="text-2xl font-bold text-red-600">${totalExpenses.toFixed(2)}</p>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {/* Summary Card */}
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.1 }}
+            className="bg-white/10 backdrop-blur-xl rounded-2xl shadow-xl p-6 border border-white/20"
+          >
+            <h2 className="text-xl font-bold text-white mb-6">Data Summary</h2>
+            <div className="space-y-6">
+              <div>
+                <p className="text-sm text-white/60 mb-1">Total Expenses Value</p>
+                <p className="text-4xl font-bold text-white">${totalExpenses.toFixed(2)}</p>
+              </div>
+              <div>
+                <p className="text-sm text-white/60 mb-1">Total Records</p>
+                <p className="text-2xl font-bold text-white">{expenses.length}</p>
+              </div>
             </div>
-            <div>
-              <p className="text-sm text-gray-500">Number of Expenses</p>
-              <p className="text-2xl font-bold text-blue-600">{expenses.length}</p>
-            </div>
-          </div>
-        </div>
+          </motion.div>
 
-        <div className="bg-white rounded-lg shadow-md p-6">
-          <h2 className="text-xl font-semibold text-gray-900 mb-4">Export Options</h2>
-          <div className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Export Format</label>
-              <select
-                value={exportFormat}
-                onChange={(e) => setExportFormat(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+          {/* Export Options */}
+          <motion.div
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2 }}
+            className="bg-white/10 backdrop-blur-xl rounded-2xl shadow-xl p-6 border border-white/20"
+          >
+            <h2 className="text-xl font-bold text-white mb-6">Export Options</h2>
+            <div className="space-y-6">
+              <div>
+                <label className="block text-sm font-medium text-white/90 mb-2">Format</label>
+                <div className="grid grid-cols-3 gap-3">
+                  <button
+                    onClick={() => setExportFormat('csv')}
+                    className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all ${exportFormat === 'csv'
+                        ? 'bg-blue-500 border-blue-400 text-white shadow-lg shadow-blue-500/30'
+                        : 'bg-white/5 border-white/10 text-white/70 hover:bg-white/10'
+                      }`}
+                  >
+                    <Table className="w-6 h-6 mb-2" />
+                    <span className="text-xs font-medium">CSV</span>
+                  </button>
+                  <button
+                    onClick={() => setExportFormat('json')}
+                    className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all ${exportFormat === 'json'
+                        ? 'bg-purple-500 border-purple-400 text-white shadow-lg shadow-purple-500/30'
+                        : 'bg-white/5 border-white/10 text-white/70 hover:bg-white/10'
+                      }`}
+                  >
+                    <FileJson className="w-6 h-6 mb-2" />
+                    <span className="text-xs font-medium">JSON</span>
+                  </button>
+                  <button
+                    onClick={() => setExportFormat('pdf')}
+                    className={`flex flex-col items-center justify-center p-3 rounded-xl border transition-all ${exportFormat === 'pdf'
+                        ? 'bg-red-500 border-red-400 text-white shadow-lg shadow-red-500/30'
+                        : 'bg-white/5 border-white/10 text-white/70 hover:bg-white/10'
+                      }`}
+                  >
+                    <FileText className="w-6 h-6 mb-2" />
+                    <span className="text-xs font-medium">PDF</span>
+                  </button>
+                </div>
+              </div>
+
+              <button
+                onClick={handleExport}
+                disabled={expenses.length === 0 || loading}
+                className={`w-full font-bold py-3 px-4 rounded-xl transition duration-200 border flex items-center justify-center gap-2
+                  ${expenses.length === 0 || loading
+                    ? 'bg-gray-500/50 text-white/50 border-gray-500/30 cursor-not-allowed'
+                    : 'bg-emerald-500 hover:bg-emerald-600 text-white border-emerald-400/50 shadow-lg hover:shadow-emerald-500/30'
+                  }`}
               >
-                <option value="csv">CSV (Excel compatible)</option>
-                <option value="json">JSON</option>
-                <option value="pdf">PDF (Print)</option>
-              </select>
+                {loading ? 'Loading...' : (
+                  <>
+                    <Download className="w-5 h-5" />
+                    Export as {exportFormat.toUpperCase()}
+                  </>
+                )}
+              </button>
+
+              {expenses.length === 0 && !loading && (
+                <p className="text-sm text-white/50 text-center">No expenses recorded to export.</p>
+              )}
             </div>
-            <Button onClick={handleExport} className="w-full" disabled={expenses.length === 0 || loading}>
-              {loading ? 'Loading...' : `Export as ${exportFormat.toUpperCase()}`}
-            </Button>
-            {expenses.length === 0 && !loading && (
-              <p className="text-sm text-gray-500 text-center">No expenses to export</p>
-            )}
-          </div>
+          </motion.div>
         </div>
       </div>
     </div>

@@ -40,7 +40,7 @@ const Dashboard = () => {
       const totalExpenses = expenses.reduce((sum, exp) => sum + parseFloat(exp.amount || 0), 0);
       const expenseCount = expenses.length;
 
-      // Get unique people from expenses (assuming expenses have participants or person field)
+      // Get unique people from expenses
       const uniquePeople = new Set();
       expenses.forEach(exp => {
         if (exp.person) uniquePeople.add(exp.person);
@@ -48,6 +48,8 @@ const Dashboard = () => {
           exp.participants.forEach(p => uniquePeople.add(p));
         }
       });
+      // Also from settlements
+      settlements.forEach(s => uniquePeople.add(s.person));
 
       // Calculate unsettled debts
       const unsettledDebts = settlements.filter(s => !s.settled).length;
@@ -70,10 +72,16 @@ const Dashboard = () => {
       const now = new Date();
       const upcomingReminders = allReminders
         .filter(reminder => {
-          const reminderDateTime = new Date(`${reminder.date}T${reminder.time}`);
+          // Fix logic: Ensure date is YYYY-MM-DD
+          const dateStr = typeof reminder.date === 'string' ? reminder.date.split('T')[0] : new Date(reminder.date).toISOString().split('T')[0];
+          const reminderDateTime = new Date(`${dateStr}T${reminder.time}`);
           return reminderDateTime >= now && !reminder.notified;
         })
-        .sort((a, b) => new Date(`${a.date}T${a.time}`) - new Date(`${b.date}T${b.time}`));
+        .sort((a, b) => {
+          const dateA = typeof a.date === 'string' ? a.date.split('T')[0] : new Date(a.date).toISOString().split('T')[0];
+          const dateB = typeof b.date === 'string' ? b.date.split('T')[0] : new Date(b.date).toISOString().split('T')[0];
+          return new Date(`${dateA}T${a.time}`) - new Date(`${dateB}T${b.time}`);
+        });
 
       setReminders(upcomingReminders);
       setLastUpdated(new Date());
@@ -164,163 +172,154 @@ const Dashboard = () => {
       <div className="min-h-screen bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700">
         <Header />
 
-        <div className="max-w-7xl mx-auto px-4 py-16 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
           {/* Header with Refresh */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6 }}
-            className="mb-12"
+            className="mb-8"
           >
             <div className="flex justify-between items-center mb-4">
               <div>
-                <h1 className="text-5xl font-bold text-white mb-2">Dashboard</h1>
-                <p className="text-xl text-white/80">Track your expenses and settlements at a glance</p>
+                <h1 className="text-4xl font-bold text-white mb-2">Dashboard</h1>
+                <p className="text-white/80">Overview</p>
               </div>
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
                 onClick={handleRefresh}
                 disabled={refreshing}
-                className="flex items-center gap-2 bg-white/20 hover:bg-white/30 backdrop-blur-xl text-white px-6 py-3 rounded-lg border border-white/30 transition-all"
+                className="flex items-center gap-2 bg-white/20 hover:bg-white/30 backdrop-blur-xl text-white px-4 py-2 rounded-lg border border-white/30 transition-all"
               >
-                <RefreshCw className={`w-5 h-5 ${refreshing ? 'animate-spin' : ''}`} />
-                <span>Refresh</span>
+                <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
+                <span>{refreshing ? 'Updating...' : 'Refresh'}</span>
               </motion.button>
             </div>
-            <p className="text-sm text-white/60">
-              Last updated: {lastUpdated.toLocaleTimeString()} • Auto-refreshes every 30s
-            </p>
           </motion.div>
 
           {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <AnimatePresence mode="wait">
               {statsCards.map((card, index) => (
                 <motion.div
                   key={card.title}
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, y: -20 }}
                   transition={{ duration: 0.6, delay: index * 0.1 }}
-                  whileHover={{ scale: 1.05, y: -5 }}
-                  className={`relative overflow-hidden rounded-xl bg-gradient-to-br ${card.bgGradient} backdrop-blur-xl p-6 shadow-lg hover:shadow-2xl transition-all border border-white/20 cursor-pointer`}
+                  whileHover={{ scale: 1.02, y: -2 }}
+                  className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${card.bgGradient} backdrop-blur-xl p-6 shadow-xl border border-white/20`}
                 >
                   <div className="flex items-start justify-between mb-4">
-                    <div className={`p-3 rounded-lg bg-gradient-to-br ${card.gradient}`}>
+                    <div className={`p-3 rounded-xl bg-gradient-to-br ${card.gradient}`}>
                       <card.icon className="w-6 h-6 text-white" />
                     </div>
                   </div>
-                  <h3 className="text-white/80 text-sm font-medium mb-2">{card.title}</h3>
-                  <p className="text-3xl font-bold text-white mb-1">{card.value}</p>
-                  <p className="text-xs text-white/60">{card.subtitle}</p>
+                  <h3 className="text-white/80 text-sm font-medium mb-1">{card.title}</h3>
+                  <p className="text-3xl font-bold text-white mb-2">{card.value}</p>
+                  <p className="text-xs text-white/50">{card.subtitle}</p>
                 </motion.div>
               ))}
             </AnimatePresence>
           </div>
 
-          {/* Recent Expenses Section */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="mb-12 bg-white/10 backdrop-blur-xl rounded-2xl shadow-2xl p-8 border border-white/20"
-          >
-            <div className="flex items-center gap-3 mb-6">
-              <Receipt className="w-6 h-6 text-white" />
-              <h2 className="text-2xl font-bold text-white">Recent Expenses</h2>
-            </div>
-            {recentExpenses.length === 0 ? (
-              <p className="text-white/80">No expenses yet. Start tracking your spending!</p>
-            ) : (
-              <div className="space-y-3">
-                {recentExpenses.map((expense, index) => (
-                  <motion.div
-                    key={expense._id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.4, delay: index * 0.1 }}
-                    className="bg-white/5 rounded-lg p-4 border border-white/10 hover:bg-white/10 transition-all"
-                  >
-                    <div className="flex justify-between items-center">
-                      <div className="flex-1">
-                        <h3 className="text-white font-semibold">{expense.title || expense.description}</h3>
-                        <p className="text-white/70 text-sm mt-1">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {/* Recent Expenses Section */}
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="bg-white/10 backdrop-blur-xl rounded-2xl shadow-xl p-6 border border-white/20"
+            >
+              <div className="flex items-center gap-3 mb-6 border-b border-white/10 pb-4">
+                <Receipt className="w-5 h-5 text-white" />
+                <h2 className="text-xl font-bold text-white">Recent Expenses</h2>
+              </div>
+              {recentExpenses.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-white/60">No expenses yet. Start tracking your spending!</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {recentExpenses.map((expense, index) => (
+                    <motion.div
+                      key={expense._id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.4, delay: index * 0.05 }}
+                      className="bg-white/5 rounded-xl p-4 border border-white/5 hover:bg-white/10 transition-all flex justify-between items-center group"
+                    >
+                      <div>
+                        <h3 className="text-white font-semibold truncate max-w-[200px]">{expense.title || expense.description}</h3>
+                        <p className="text-white/60 text-xs mt-1">
                           {expense.category} • {new Date(expense.date).toLocaleDateString()}
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="text-2xl font-bold text-white">${parseFloat(expense.amount).toFixed(2)}</p>
+                        <p className="text-lg font-bold text-white">${parseFloat(expense.amount).toFixed(2)}</p>
                       </div>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            )}
-          </motion.div>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
+            </motion.div>
 
-          {/* Reminders Section */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.3 }}
-            className="mb-12 bg-white/10 backdrop-blur-xl rounded-2xl shadow-2xl p-8 border border-white/20"
-          >
-            <div className="flex items-center gap-3 mb-6">
-              <Bell className="w-6 h-6 text-white" />
-              <h2 className="text-2xl font-bold text-white">Upcoming Reminders</h2>
-            </div>
-            {loadingReminders ? (
-              <div className="flex items-center justify-center py-8">
-                <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-white"></div>
+            {/* Reminders Section */}
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              className="bg-white/10 backdrop-blur-xl rounded-2xl shadow-xl p-6 border border-white/20"
+            >
+              <div className="flex items-center gap-3 mb-6 border-b border-white/10 pb-4">
+                <Bell className="w-5 h-5 text-white" />
+                <h2 className="text-xl font-bold text-white">Upcoming Reminders</h2>
               </div>
-            ) : reminders.length === 0 ? (
-              <p className="text-white/80">No reminders set. Use the navigation menu to add reminders.</p>
-            ) : (
-              <div className="space-y-4">
-                {reminders.slice(0, 3).map((reminder, index) => (
-                  <motion.div
-                    key={reminder._id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ duration: 0.4, delay: index * 0.1 }}
-                    className="bg-white/5 rounded-lg p-4 border border-white/10 hover:bg-white/10 transition-all"
-                  >
-                    <div className="flex items-start gap-3">
-                      <Calendar className="w-5 h-5 text-white/70 mt-1" />
-                      <div className="flex-1">
-                        <h3 className="text-white font-semibold">{reminder.title}</h3>
-                        <p className="text-white/70 text-sm mt-1">
-                          {new Date(reminder.date).toLocaleDateString()} at {reminder.time}
-                        </p>
-                        {reminder.description && (
-                          <p className="text-white/60 text-sm mt-2">{reminder.description}</p>
-                        )}
+              {loadingReminders ? (
+                <div className="flex items-center justify-center py-8">
+                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-white"></div>
+                </div>
+              ) : reminders.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-white/60">No upcoming reminders.</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {reminders.slice(0, 4).map((reminder, index) => (
+                    <motion.div
+                      key={reminder._id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.4, delay: index * 0.05 }}
+                      className="bg-white/5 rounded-xl p-4 border border-white/5 hover:bg-white/10 transition-all"
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className="bg-blue-500/20 p-2 rounded-lg">
+                          <Calendar className="w-4 h-4 text-blue-300" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-white font-semibold truncate">{reminder.title}</h3>
+                          <div className="flex items-center gap-2 mt-1">
+                            <div className="text-xs text-white/60 bg-white/10 px-2 py-0.5 rounded">
+                              {new Date(reminder.date).toLocaleDateString()}
+                            </div>
+                            <div className="text-xs text-white/60 bg-white/10 px-2 py-0.5 rounded">
+                              {reminder.time}
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </motion.div>
-                ))}
-                {reminders.length > 3 && (
-                  <p className="text-white/60 text-sm text-center">
-                    And {reminders.length - 3} more... View all in Reminders section.
-                  </p>
-                )}
-              </div>
-            )}
-          </motion.div>
-
-          {/* Quick Actions */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.4 }}
-            className="bg-white/10 backdrop-blur-xl rounded-2xl shadow-2xl p-8 border border-white/20"
-          >
-            <h2 className="text-2xl font-bold text-white mb-4">Quick Actions</h2>
-            <p className="text-white/80">
-              Use the navigation menu to add expenses, view settlements, send reminders, or export your data.
-            </p>
-          </motion.div>
+                    </motion.div>
+                  ))}
+                  {reminders.length > 4 && (
+                    <p className="text-white/50 text-xs text-center mt-4">
+                      + {reminders.length - 4} more
+                    </p>
+                  )}
+                </div>
+              )}
+            </motion.div>
+          </div>
         </div>
       </div>
     </>
