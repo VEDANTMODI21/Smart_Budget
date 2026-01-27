@@ -69,21 +69,16 @@ const Dashboard = () => {
       setRecentExpenses(expenses.slice(-5).reverse());
 
       // Filter and sort upcoming reminders
-      const now = new Date();
-      const upcomingReminders = allReminders
-        .filter(reminder => {
-          // Fix logic: Ensure date is YYYY-MM-DD
-          const dateStr = typeof reminder.date === 'string' ? reminder.date.split('T')[0] : new Date(reminder.date).toISOString().split('T')[0];
-          const reminderDateTime = new Date(`${dateStr}T${reminder.time}`);
-          return reminderDateTime >= now && !reminder.notified;
-        })
+      // Filter and sort active reminders
+      const activeReminders = allReminders
+        .filter(reminder => !reminder.notified)
         .sort((a, b) => {
           const dateA = typeof a.date === 'string' ? a.date.split('T')[0] : new Date(a.date).toISOString().split('T')[0];
           const dateB = typeof b.date === 'string' ? b.date.split('T')[0] : new Date(b.date).toISOString().split('T')[0];
           return new Date(`${dateA}T${a.time}`) - new Date(`${dateB}T${b.time}`);
         });
 
-      setReminders(upcomingReminders);
+      setReminders(activeReminders);
       setLastUpdated(new Date());
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
@@ -273,7 +268,7 @@ const Dashboard = () => {
             >
               <div className="flex items-center gap-3 mb-6 border-b border-white/10 pb-4">
                 <Bell className="w-5 h-5 text-white" />
-                <h2 className="text-xl font-bold text-white">Upcoming Reminders</h2>
+                <h2 className="text-xl font-bold text-white">Active Reminders</h2>
               </div>
               {loadingReminders ? (
                 <div className="flex items-center justify-center py-8">

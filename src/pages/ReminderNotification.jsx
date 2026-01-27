@@ -27,32 +27,15 @@ export default function ReminderNotification() {
   }, []);
 
   // Check intervals
+  // Check intervals - REMOVED since GlobalReminderHandler handles this
+  // But we might want to refresh the list periodically
   useEffect(() => {
-    const checkReminders = setInterval(() => {
-      const now = new Date();
-      reminders.forEach(reminder => {
-        // Fix logic: Ensure date is YYYY-MM-DD
-        const dateStr = typeof reminder.date === 'string' ? reminder.date.split('T')[0] : new Date(reminder.date).toISOString().split('T')[0];
-        const reminderDateTime = new Date(`${dateStr}T${reminder.time}`);
+    const refreshList = setInterval(() => {
+      loadReminders();
+    }, 30000);
 
-        if (reminderDateTime <= now && !reminder.notified) {
-          // Use browser notification if permissible, otherwise alert
-          if ("Notification" in window && Notification.permission === "granted") {
-            new Notification(`Reminder: ${reminder.title}`, {
-              body: reminder.description || "It's time!",
-              icon: '/vite.svg'
-            });
-          } else {
-            // Fallback for no notification permission or mobile
-            alert(`Reminder: ${reminder.title}\n${reminder.description || "It's time!"}`);
-          }
-          handleMarkNotified(reminder._id);
-        }
-      });
-    }, 30000); // Check every 30 seconds
-
-    return () => clearInterval(checkReminders);
-  }, [reminders]);
+    return () => clearInterval(refreshList);
+  }, []);
 
   const loadReminders = async () => {
     try {
@@ -67,17 +50,7 @@ export default function ReminderNotification() {
     }
   };
 
-  const handleMarkNotified = async (id) => {
-    try {
-      const reminder = reminders.find(r => r._id === id);
-      await remindersAPI.update(id, { ...reminder, notified: true });
-      setReminders(reminders.map(r =>
-        r._id === id ? { ...r, notified: true } : r
-      ));
-    } catch (err) {
-      console.error('Error updating reminder:', err);
-    }
-  };
+
 
   const handleAddReminder = async (e) => {
     e.preventDefault();

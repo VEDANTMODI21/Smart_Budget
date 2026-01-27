@@ -13,11 +13,13 @@ import SettlementTracker from '@/pages/SettlementTracker';
 import ReminderNotification from '@/pages/ReminderNotification';
 import ExportFeature from '@/pages/ExportFeature';
 import SharedExpenseView from '@/pages/SharedExpenseView';
+import GlobalReminderHandler from '@/components/GlobalReminderHandler';
 
 function App() {
   return (
     <AuthProvider>
       <Router>
+        <GlobalReminderHandler />
         <Routes>
           <Route path="/" element={<Navigate to="/dashboard" replace />} />
           {/* Redirects for legacy routes */}
