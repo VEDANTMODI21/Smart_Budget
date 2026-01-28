@@ -2,13 +2,13 @@ import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { LogOut, Menu, X, DollarSign } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/Contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 
 const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { userProfile, signOut } = useAuth();
+  const { user, signOut } = useAuth();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   const handleLogout = async () => {
@@ -43,11 +43,10 @@ const Header = () => {
               <Link
                 key={item.path}
                 to={item.path}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                  isActive(item.path)
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${isActive(item.path)
                     ? 'bg-white/20 text-white'
                     : 'text-white/80 hover:bg-white/10 hover:text-white'
-                }`}
+                  }`}
               >
                 {item.name}
               </Link>
@@ -55,7 +54,7 @@ const Header = () => {
           </div>
 
           <div className="hidden md:flex items-center space-x-4">
-            <span className="text-white/80 text-sm">{userProfile?.name}</span>
+            <span className="text-white/80 text-sm">{user?.name}</span>
             <Button
               onClick={handleLogout}
               variant="ghost"
@@ -89,17 +88,16 @@ const Header = () => {
                   key={item.path}
                   to={item.path}
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                    isActive(item.path)
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${isActive(item.path)
                       ? 'bg-white/20 text-white'
                       : 'text-white/80 hover:bg-white/10 hover:text-white'
-                  }`}
+                    }`}
                 >
                   {item.name}
                 </Link>
               ))}
               <div className="pt-2 border-t border-white/20">
-                <div className="px-4 py-2 text-white/80 text-sm">{userProfile?.name}</div>
+                <div className="px-4 py-2 text-white/80 text-sm">{user?.name}</div>
                 <button
                   onClick={() => {
                     handleLogout();
