@@ -1,377 +1,360 @@
 import React, { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Filter, ArrowUpDown, Trash2, Calendar, Tag, Search, Plus, DollarSign, FileText, CheckCircle } from 'lucide-react';
-import Header from '@/components/Header';
-import { expensesAPI } from '@/lib/api';
 import { Helmet } from 'react-helmet';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Plus, Edit, Trash2, Filter, AlertTriangle, X } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/lib/customSupabaseClient';
+import Header from '@/components/Header';
+import ExpenseForm from '@/components/ExpenseForm';
+import { Button } from '@/components/ui/button';
+import { useToast } from '@/components/ui/use-toast';
+import { Label } from '@/components/ui/label';
 
-export default function ExpenseList() {
+const ExpenseList = () => {
+  const { user } = useAuth();
+  const { toast } = useToast();
   const [expenses, setExpenses] = useState([]);
-  const [filter, setFilter] = useState('all');
-  const [sortBy, setSortBy] = useState('date');
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [searchTerm, setSearchTerm] = useState('');
-
-  // Add Form State
   const [showForm, setShowForm] = useState(false);
-  const [title, setTitle] = useState('');
-  const [amount, setAmount] = useState('');
-  const [category, setCategory] = useState('Food');
-  const [date, setDate] = useState(new Date().toISOString().split('T')[0]);
-  const [description, setDescription] = useState('');
-  const [submitting, setSubmitting] = useState(false);
-
-  // Backend Enum: ['Food', 'Transport', 'Shopping', 'Bills', 'Entertainment', 'Health', 'Other']
-  const categories = ['Food', 'Transport', 'Shopping', 'Bills', 'Entertainment', 'Health', 'Other'];
+  const [editingExpense, setEditingExpense] = useState(null);
+  const [deleteConfirm, setDeleteConfirm] = useState({
+    isOpen: false,
+    expenseId: null
+  });
+  const [filters, setFilters] = useState({
+    category: '',
+    startDate: '',
+    endDate: '',
+  });
 
   useEffect(() => {
-    loadExpenses();
-  }, []);
+    if (user) {
+      fetchExpenses();
+    }
+  }, [user, filters]);
 
-  const loadExpenses = async () => {
+  const fetchExpenses = async () => {
     try {
-      setLoading(true);
-      const data = await expensesAPI.getAll();
-      setExpenses(data);
-    } catch (err) {
-      setError(err.message || 'Failed to load expenses');
-      console.error('Error loading expenses:', err);
+      // Explicitly filter by user_id to respect RLS and ensure we only fetch user's own expenses
+      let query = supabase
+        .from('expenses')
+        .select(`
+          *,
+          expense_participants (
+            id,
+            user_id,
+            amount_owed,
+            paid_status,
+            users (name, email)
+          )
+        `)
+        .eq('user_id', user.id)
+        .order('date', { ascending: false });
+
+      if (filters.category) {
+        query = query.eq('category', filters.category);
+      }
+      if (filters.startDate) {
+        query = query.gte('date', filters.startDate);
+      }
+      if (filters.endDate) {
+        query = query.lte('date', filters.endDate);
+      }
+
+      const { data, error } = await query;
+
+      if (error) throw error;
+      setExpenses(data || []);
+    } catch (error) {
+      console.error('Error fetching expenses:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to fetch expenses",
+      });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleAddExpense = async (e) => {
-    e.preventDefault();
-    if (!title || !amount) {
-      setError('Please fill in title and amount');
-      return;
-    }
+  const initiateDelete = (expenseId) => {
+    setDeleteConfirm({ isOpen: true, expenseId });
+  };
+
+  const performDelete = async () => {
+    const { expenseId } = deleteConfirm;
+    if (!expenseId) return;
 
     try {
-      setSubmitting(true);
-      setError('');
-      const newExpense = await expensesAPI.create({
-        title,
-        amount: parseFloat(amount),
-        category,
-        date,
-        description
+      // Ensure we only delete expenses belonging to the authenticated user
+      const { error } = await supabase
+        .from('expenses')
+        .delete()
+        .eq('id', expenseId)
+        .eq('user_id', user.id); // Extra safety check matching RLS
+
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "Expense deleted successfully!",
       });
-      setExpenses([newExpense, ...expenses]);
-      // Reset form
-      setTitle('');
-      setAmount('');
-      setCategory('Food');
-      setDate(new Date().toISOString().split('T')[0]);
-      setDescription('');
-      setShowForm(false);
-    } catch (err) {
-      setError(err.message || 'Failed to add expense');
+
+      fetchExpenses();
+    } catch (error) {
+      console.error('Error deleting expense:', error);
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to delete expense",
+      });
     } finally {
-      setSubmitting(false);
+      setDeleteConfirm({ isOpen: false, expenseId: null });
     }
   };
 
-  const handleDelete = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this expense?")) return;
-    try {
-      await expensesAPI.delete(id);
-      setExpenses(expenses.filter(exp => exp._id !== id));
-    } catch (err) {
-      setError(err.message || 'Failed to delete expense');
-    }
+  const handleEdit = (expense) => {
+    setEditingExpense({
+      ...expense,
+      participants: expense.expense_participants?.map(p => p.user_id) || [],
+    });
+    setShowForm(true);
   };
 
-  const filteredExpenses = expenses.filter(exp => {
-    const matchesFilter = filter === 'all' || exp.category === filter;
-    const matchesSearch = exp.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (exp.description && exp.description.toLowerCase().includes(searchTerm.toLowerCase()));
-    return matchesFilter && matchesSearch;
-  });
+  const handleFilterChange = (e) => {
+    setFilters({ ...filters, [e.target.name]: e.target.value });
+  };
 
-  const sortedExpenses = [...filteredExpenses].sort((a, b) => {
-    if (sortBy === 'date') {
-      return new Date(b.date) - new Date(a.date);
-    } else if (sortBy === 'amount') {
-      return parseFloat(b.amount) - parseFloat(a.amount);
-    } else if (sortBy === 'amountAlt') {
-      return parseFloat(a.amount) - parseFloat(b.amount);
-    }
-    return 0;
-  });
-
-  const totalByCategory = categories.reduce((acc, cat) => {
-    acc[cat] = expenses
-      .filter(exp => exp.category === cat)
-      .reduce((sum, exp) => sum + parseFloat(exp.amount || 0), 0);
-    return acc;
-  }, {});
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700">
+        <Header />
+        <div className="flex items-center justify-center min-h-[80vh]">
+          <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-white"></div>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700">
+    <>
       <Helmet>
-        <title>Expenses - Smart Budget</title>
+        <title>Expenses - SplitWise</title>
+        <meta name="description" content="Manage and track all your shared expenses" />
       </Helmet>
 
-      <Header />
+      <div className="min-h-screen bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700">
+        <Header />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
-          <h1 className="text-4xl font-bold text-white mb-2">Expense Tracker</h1>
-          <p className="text-white/80">Manage your spending and view history</p>
-        </motion.div>
-
-        {/* Categories Summary */}
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-3 mb-8 overflow-x-auto pb-4 lg:pb-0">
-          {categories.map((cat, index) => (
-            <motion.div
-              key={cat}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.05 }}
-              className="bg-white/10 backdrop-blur-md rounded-xl p-3 border border-white/10 min-w-[120px]"
+        <div className="max-w-7xl mx-auto px-4 py-16 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between mb-8">
+            <motion.h1
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="text-4xl font-bold text-white"
             >
-              <h3 className="text-xs font-medium text-white/60 mb-1">{cat}</h3>
-              <p className="text-lg font-bold text-white">${totalByCategory[cat]?.toFixed(2) || '0.00'}</p>
-            </motion.div>
-          ))}
-        </div>
+              My Expenses
+            </motion.h1>
+            <Button
+              onClick={() => {
+                setEditingExpense(null);
+                setShowForm(true);
+              }}
+              className="bg-white text-purple-600 hover:bg-white/90"
+            >
+              <Plus className="w-5 h-5 mr-2" />
+              Add Expense
+            </Button>
+          </div>
 
-        <button
-          onClick={() => setShowForm(!showForm)}
-          className="mb-6 w-full md:w-auto bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-6 rounded-xl transition duration-200 border border-green-400/50 shadow-lg flex items-center justify-center gap-2"
-        >
-          <Plus className={`w-5 h-5 transition-transform duration-300 ${showForm ? 'rotate-45' : ''}`} />
-          {showForm ? 'Close Form' : 'Add New Expense'}
-        </button>
+          {/* Filters */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white/10 backdrop-blur-xl rounded-xl p-6 mb-8 border border-white/20"
+          >
+            <div className="flex items-center mb-4">
+              <Filter className="w-5 h-5 text-white mr-2" />
+              <h2 className="text-xl font-semibold text-white">Filters</h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor="category" className="text-white mb-2 block">Category</Label>
+                <select
+                  id="category"
+                  name="category"
+                  value={filters.category}
+                  onChange={handleFilterChange}
+                  className="w-full px-4 py-2 bg-white/20 border border-white/30 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-white/50"
+                >
+                  <option value="" className="text-gray-900">All Categories</option>
+                  <option value="Food" className="text-gray-900">Food</option>
+                  <option value="Transport" className="text-gray-900">Transport</option>
+                  <option value="Entertainment" className="text-gray-900">Entertainment</option>
+                  <option value="Utilities" className="text-gray-900">Utilities</option>
+                  <option value="Other" className="text-gray-900">Other</option>
+                </select>
+              </div>
+              <div>
+                <Label htmlFor="startDate" className="text-white mb-2 block">Start Date</Label>
+                <input
+                  id="startDate"
+                  type="date"
+                  name="startDate"
+                  value={filters.startDate}
+                  onChange={handleFilterChange}
+                  className="w-full px-4 py-2 bg-white/20 border border-white/30 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-white/50"
+                />
+              </div>
+              <div>
+                <Label htmlFor="endDate" className="text-white mb-2 block">End Date</Label>
+                <input
+                  id="endDate"
+                  type="date"
+                  name="endDate"
+                  value={filters.endDate}
+                  onChange={handleFilterChange}
+                  className="w-full px-4 py-2 bg-white/20 border border-white/30 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-white/50"
+                />
+              </div>
+            </div>
+          </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Add Form Side (Conditional on mobile, sticky on desktop) */}
-          <AnimatePresence>
-            {showForm && (
+          {/* Expenses List */}
+          <div className="space-y-4">
+            {expenses.length === 0 ? (
               <motion.div
-                initial={{ opacity: 0, height: 0, scale: 0.95 }}
-                animate={{ opacity: 1, height: 'auto', scale: 1 }}
-                exit={{ opacity: 0, height: 0, scale: 0.95 }}
-                className="lg:col-span-1"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="bg-white/10 backdrop-blur-xl rounded-xl p-12 text-center border border-white/20"
               >
-                <div className="bg-white/10 backdrop-blur-xl rounded-2xl shadow-xl p-6 border border-white/20 sticky top-24">
-                  <h2 className="text-xl font-bold text-white mb-6">New Expense</h2>
-
-                  <form onSubmit={handleAddExpense} className="space-y-4">
-                    {error && <p className="text-red-300 text-sm bg-red-500/10 p-2 rounded">{error}</p>}
-
-                    <div>
-                      <label className="block text-sm font-medium text-white/90 mb-1">Title</label>
-                      <input
-                        type="text"
-                        value={title}
-                        onChange={(e) => setTitle(e.target.value)}
-                        placeholder="e.g. Grocery"
-                        className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg focus:ring-2 focus:ring-white/50 focus:border-transparent outline-none text-white placeholder-white/50 backdrop-blur-xl"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-white/90 mb-1">Amount</label>
-                      <div className="relative">
-                        <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50" />
-                        <input
-                          type="number"
-                          value={amount}
-                          onChange={(e) => setAmount(e.target.value)}
-                          placeholder="0.00"
-                          step="0.01"
-                          className="w-full pl-10 pr-4 py-2 bg-white/10 border border-white/20 rounded-lg focus:ring-2 focus:ring-white/50 focus:border-transparent outline-none text-white placeholder-white/50 backdrop-blur-xl"
-                        />
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div>
-                        <label className="block text-sm font-medium text-white/90 mb-1">Category</label>
-                        <select
-                          value={category}
-                          onChange={(e) => setCategory(e.target.value)}
-                          className="w-full px-2 py-2 bg-white/10 border border-white/20 rounded-lg focus:ring-2 focus:ring-white/50 outline-none text-white [&>option]:text-gray-900"
-                        >
-                          {categories.map(cat => (
-                            <option key={cat} value={cat}>{cat}</option>
-                          ))}
-                        </select>
-                      </div>
-                      <div>
-                        <label className="block text-sm font-medium text-white/90 mb-1">Date</label>
-                        <input
-                          type="date"
-                          value={date}
-                          onChange={(e) => setDate(e.target.value)}
-                          className="w-full px-2 py-2 bg-white/10 border border-white/20 rounded-lg focus:ring-2 focus:ring-white/50 outline-none text-white"
-                        />
-                      </div>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-white/90 mb-1">Description</label>
-                      <textarea
-                        value={description}
-                        onChange={(e) => setDescription(e.target.value)}
-                        rows={2}
-                        placeholder="Details..."
-                        className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg focus:ring-2 focus:ring-white/50 outline-none text-white placeholder-white/50 backdrop-blur-xl resize-none"
-                      />
-                    </div>
-
-                    <button
-                      type="submit"
-                      disabled={submitting}
-                      className="w-full bg-blue-500 hover:bg-blue-600 text-white font-bold py-3 px-4 rounded-xl transition duration-200 border border-blue-400/50 shadow-lg"
-                    >
-                      {submitting ? 'Adding...' : 'Add Expense'}
-                    </button>
-                  </form>
-                </div>
+                <p className="text-white text-lg">No expenses found. Add your first expense!</p>
               </motion.div>
-            )}
-          </AnimatePresence>
-
-          {/* List Side */}
-          <div className={`${showForm ? 'lg:col-span-2' : 'lg:col-span-3'} transition-all duration-300`}>
-            {/* Controls */}
-            <div className="bg-white/10 backdrop-blur-xl rounded-2xl shadow-lg p-6 mb-6 border border-white/20">
-              <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
-                <div className="w-full md:w-1/3 relative">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50" />
-                  <input
-                    type="text"
-                    placeholder="Search expenses..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-full pl-10 pr-4 py-2 bg-white/10 border border-white/20 rounded-lg focus:ring-2 focus:ring-white/50 focus:border-transparent outline-none text-white placeholder-white/50 transition-all"
-                  />
-                </div>
-
-                <div className="flex gap-4 w-full md:w-auto overflow-x-auto pb-2 md:pb-0">
-                  <div className="min-w-[140px]">
-                    <div className="relative">
-                      <Filter className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50" />
-                      <select
-                        value={filter}
-                        onChange={(e) => setFilter(e.target.value)}
-                        className="w-full pl-10 pr-8 py-2 bg-white/10 border border-white/20 rounded-lg focus:ring-2 focus:ring-white/50 outline-none text-white appearance-none cursor-pointer [&>option]:text-gray-900"
-                      >
-                        <option value="all">All Categories</option>
-                        {categories.map(cat => (
-                          <option key={cat} value={cat}>{cat}</option>
-                        ))}
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="min-w-[140px]">
-                    <div className="relative">
-                      <ArrowUpDown className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50" />
-                      <select
-                        value={sortBy}
-                        onChange={(e) => setSortBy(e.target.value)}
-                        className="w-full pl-10 pr-8 py-2 bg-white/10 border border-white/20 rounded-lg focus:ring-2 focus:ring-white/50 outline-none text-white appearance-none cursor-pointer [&>option]:text-gray-900"
-                      >
-                        <option value="date">Date (New)</option>
-                        <option value="amount">Amount (High)</option>
-                        <option value="amountAlt">Amount (Low)</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Expenses List */}
-            <div className="bg-white/10 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 overflow-hidden min-h-[400px]">
-              <div className="px-6 py-4 border-b border-white/10">
-                <h2 className="text-xl font-bold text-white">
-                  Transactions ({sortedExpenses.length})
-                </h2>
-              </div>
-
-              {loading ? (
-                <div className="flex items-center justify-center p-12">
-                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-white"></div>
-                </div>
-              ) : sortedExpenses.length === 0 ? (
-                <div className="flex flex-col items-center justify-center p-12 text-center text-white/60">
-                  <div className="bg-white/5 p-4 rounded-full mb-4">
-                    <Tag className="w-8 h-8 opacity-50" />
-                  </div>
-                  <p className="text-lg">No expenses found</p>
-                  <p className="text-sm">Add a new expense to get started</p>
-                </div>
-              ) : (
-                <div className="divide-y divide-white/10">
-                  <AnimatePresence>
-                    {sortedExpenses.map((expense) => (
-                      <motion.div
-                        key={expense._id}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="px-6 py-4 hover:bg-white/5 transition-all flex flex-col sm:flex-row sm:items-center justify-between gap-4 group"
-                      >
-                        <div className="flex items-start gap-4">
-                          <div className={`
-                            w-10 h-10 rounded-full flex items-center justify-center text-white shrink-0 mt-1 sm:mt-0
-                            ${expense.category === 'Food' ? 'bg-orange-500' :
-                              expense.category === 'Transport' ? 'bg-blue-500' :
-                                expense.category === 'Shopping' ? 'bg-pink-500' :
-                                  expense.category === 'Bills' ? 'bg-red-500' :
-                                    'bg-indigo-500'}
-                          `}>
-                            {expense.category[0]}
-                          </div>
-                          <div className="min-w-0">
-                            <div className="flex items-center gap-2">
-                              <h3 className="font-semibold text-white text-lg truncate">{expense.title}</h3>
-                              <span className="text-xs px-2 py-0.5 rounded-full bg-white/10 text-white/80 border border-white/10">
-                                {expense.category}
+            ) : (
+              expenses.map((expense, index) => (
+                <motion.div
+                  key={expense.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  className="bg-white/10 backdrop-blur-xl rounded-xl p-6 border border-white/20 hover:shadow-2xl transition-all"
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center space-x-3 mb-2">
+                        <h3 className="text-xl font-semibold text-white">{expense.description}</h3>
+                        <span className="px-3 py-1 bg-white/20 rounded-full text-xs text-white">
+                          {expense.category}
+                        </span>
+                      </div>
+                      <p className="text-2xl font-bold text-white mb-2">${parseFloat(expense.amount).toFixed(2)}</p>
+                      <p className="text-white/70 text-sm mb-3">
+                        {new Date(expense.date).toLocaleDateString('en-US', {
+                          year: 'numeric',
+                          month: 'long',
+                          day: 'numeric',
+                        })}
+                      </p>
+                      {expense.expense_participants && expense.expense_participants.length > 0 && (
+                        <div className="mt-3">
+                          <p className="text-white/80 text-sm font-medium mb-2">Participants:</p>
+                          <div className="flex flex-wrap gap-2">
+                            {expense.expense_participants.map((participant) => (
+                              <span
+                                key={participant.id}
+                                className="px-3 py-1 bg-white/20 rounded-full text-xs text-white"
+                              >
+                                {participant.users?.name} - ${parseFloat(participant.amount_owed).toFixed(2)}
+                                {participant.paid_status && ' ✓'}
                               </span>
-                            </div>
-                            <div className="text-sm text-white/60 flex items-center gap-2 mt-1">
-                              <Calendar className="w-3 h-3" />
-                              <span>{new Date(expense.date).toLocaleDateString()}</span>
-                            </div>
-                            {expense.description && (
-                              <p className="text-sm text-white/50 mt-1 line-clamp-1">{expense.description}</p>
-                            )}
+                            ))}
                           </div>
                         </div>
-
-                        <div className="flex items-center gap-6 pl-14 sm:pl-0">
-                          <span className="text-xl font-bold text-white whitespace-nowrap">
-                            ${parseFloat(expense.amount).toFixed(2)}
-                          </span>
-                          <button
-                            onClick={() => handleDelete(expense._id)}
-                            className="p-2 text-white/40 hover:text-red-400 hover:bg-white/10 rounded-lg transition-all opacity-100 sm:opacity-0 sm:group-hover:opacity-100 focus:opacity-100"
-                            title="Delete Expense"
-                          >
-                            <Trash2 className="w-5 h-5" />
-                          </button>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </AnimatePresence>
-                </div>
-              )}
-            </div>
+                      )}
+                    </div>
+                    <div className="flex space-x-2">
+                      <button
+                        onClick={() => handleEdit(expense)}
+                        className="p-2 bg-white/20 hover:bg-white/30 rounded-lg transition-all"
+                      >
+                        <Edit className="w-5 h-5 text-white" />
+                      </button>
+                      <button
+                        onClick={() => initiateDelete(expense.id)}
+                        className="p-2 bg-red-500/20 hover:bg-red-500/30 rounded-lg transition-all"
+                      >
+                        <Trash2 className="w-5 h-5 text-white" />
+                      </button>
+                    </div>
+                  </div>
+                </motion.div>
+              ))
+            )}
           </div>
         </div>
       </div>
-    </div>
+
+      {/* Delete Confirmation Modal */}
+      <AnimatePresence>
+        {deleteConfirm.isOpen && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              className="bg-white rounded-xl shadow-xl max-w-md w-full overflow-hidden"
+            >
+              <div className="p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center text-red-600">
+                    <AlertTriangle className="w-6 h-6 mr-2" />
+                    <h3 className="text-lg font-bold">Confirm Deletion</h3>
+                  </div>
+                  <button 
+                    onClick={() => setDeleteConfirm({ isOpen: false, expenseId: null })}
+                    className="text-gray-400 hover:text-gray-600 transition-colors"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                
+                <p className="text-gray-600 mb-6">
+                  Are you sure you want to delete this expense? This action cannot be undone.
+                </p>
+
+                <div className="flex justify-end space-x-3">
+                  <Button
+                    variant="outline"
+                    onClick={() => setDeleteConfirm({ isOpen: false, expenseId: null })}
+                    className="border-gray-300 text-gray-700 hover:bg-gray-50"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={performDelete}
+                    className="bg-red-600 hover:bg-red-700 text-white"
+                  >
+                    Delete Expense
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {showForm && (
+        <ExpenseForm
+          expense={editingExpense}
+          onClose={() => {
+            setShowForm(false);
+            setEditingExpense(null);
+          }}
+          onSuccess={fetchExpenses}
+        />
+      )}
+    </>
   );
-}
+};
+
+export default ExpenseList;

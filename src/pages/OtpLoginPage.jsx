@@ -1,232 +1,260 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '@/Contexts/AuthContext';
+import { Helmet } from 'react-helmet';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Mail, Lock, LogIn, KeyRound, ArrowRight, RefreshCw, AlertTriangle, Clock } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { useOtp } from '@/contexts/OtpContext';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import Header from '@/components/Header';
-import { motion } from 'framer-motion';
+import { Label } from '@/components/ui/label';
 
-export default function OtpLoginPage() {
+const OtpLoginPage = () => {
+  const navigate = useNavigate();
+  const { signIn } = useAuth();
+  const { generateAndSendOtp, verifyOtp, resendOtp, loading: otpLoading } = useOtp();
+  
+  const [step, setStep] = useState(1);
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState('');
-  const [step, setStep] = useState('email'); // 'email' or 'otp'
-  const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
-  const { loginWithOTP, generateOTP: generateOTPAPI } = useAuth();
-  const navigate = useNavigate();
+  const [authLoading, setAuthLoading] = useState(false);
+  
+  // Demo Mode State
+  const [demoCode, setDemoCode] = useState(null);
+  const [timeLeft, setTimeLeft] = useState(0);
 
-  const handleSendOTP = async (e) => {
-    e.preventDefault();
-    setError('');
-
-    if (!email) {
-      setError('Please enter your email');
-      return;
+  useEffect(() => {
+    let timer;
+    if (timeLeft > 0) {
+      timer = setInterval(() => {
+        setTimeLeft((prev) => prev - 1);
+      }, 1000);
+    } else if (timeLeft === 0 && demoCode) {
+      setDemoCode(null); // Expire the visual code
     }
+    return () => clearInterval(timer);
+  }, [timeLeft, demoCode]);
 
-    setLoading(true);
+  const formatTime = (seconds) => {
+    const m = Math.floor(seconds / 60);
+    const s = seconds % 60;
+    return `${m}:${s < 10 ? '0' : ''}${s}`;
+  };
 
-    try {
-      const response = await generateOTPAPI(email);
+  const handleSendOtp = async (e) => {
+    e.preventDefault();
+    if (!email) return;
+    
+    const result = await generateAndSendOtp(email, 'login');
+    if (result.success) {
+      setDemoCode(result.code);
+      setTimeLeft(600); // 10 minutes
+      setStep(2);
+    }
+  };
 
-      // Show appropriate message based on response
-      if (response.previewUrl) {
-        // Using Ethereal (testing) - show preview URL
-        alert(`OTP sent! Check your email.\n\nPreview URL (for testing):\n${response.previewUrl}\n\nOTP: ${response.otp}`);
-      } else if (response.otp) {
-        // Email failed or dev mode - show OTP
-        alert(`OTP: ${response.otp}\n\n${response.message || 'Check your email for the OTP.'}`);
-      } else {
-        // Email sent successfully
-        alert('OTP sent! Please check your email inbox (and spam folder).');
+  const handleVerify = async (e) => {
+    e.preventDefault();
+    if (!otp) return;
+    setAuthLoading(true);
+
+    const verifyResult = await verifyOtp(email, otp);
+
+    if (verifyResult.success) {
+      // 2. Authenticate with Supabase using the OTP as the temporary password
+      const { error } = await signIn(email, otp);
+      
+      if (!error) {
+        navigate('/dashboard');
       }
-
-      setStep('otp');
-    } catch (err) {
-      setError(err.message || 'Failed to send OTP. Please try again.');
-    } finally {
-      setLoading(false);
     }
+    setAuthLoading(false);
   };
 
-  const handleVerifyOTP = async (e) => {
-    e.preventDefault();
-    setError('');
-
-    if (!otp) {
-      setError('Please enter the OTP');
-      return;
-    }
-
-    if (otp.length !== 6) {
-      setError('OTP must be 6 digits');
-      return;
-    }
-
-    setLoading(true);
-
-    try {
-      const response = await loginWithOTP(email, otp);
-      console.log('✅ OTP login successful:', response);
-      navigate('/dashboard');
-    } catch (err) {
-      console.error('❌ OTP verification failed:', err);
-      setError(err.message || 'Verification failed. Please try again.');
-    } finally {
-      setLoading(false);
+  const handleResend = async () => {
+    const result = await resendOtp(email, 'login');
+    if (result.success) {
+      setDemoCode(result.code);
+      setTimeLeft(600);
     }
   };
-
-  const particles = [...Array(6)].map((_, i) => ({
-    x: Math.random() * 100,
-    y: Math.random() * 100,
-    duration: Math.random() * 10 + 10,
-    scale: Math.random() * 0.5 + 0.5,
-  }));
 
   return (
-    <div className="relative min-h-screen overflow-hidden bg-gradient-to-br from-indigo-900 via-purple-900 to-blue-900">
-      <Header />
+    <>
+      <Helmet>
+        <title>Login - SplitWise</title>
+        <meta name="description" content="Secure login with OTP" />
+      </Helmet>
 
-      {/* Animated Background Particles */}
-      <div className="absolute inset-0 overflow-hidden pointer-events-none">
-        {particles.map((p, i) => (
-          <motion.div
-            key={i}
-            className="absolute rounded-full bg-white/10 blur-3xl opacity-30"
-            initial={{
-              x: `${p.x}%`,
-              y: `${p.y}%`,
-              scale: p.scale
-            }}
-            animate={{
-              x: [`${p.x}%`, `${(p.x + 20) % 100}%`, `${p.x}%`],
-              y: [`${p.y}%`, `${(p.y + 20) % 100}%`, `${p.y}%`],
-              rotate: [0, 180, 0]
-            }}
-            transition={{
-              duration: p.duration,
-              repeat: Infinity,
-              ease: "linear"
-            }}
-            style={{
-              width: `${Math.random() * 300 + 100}px`,
-              height: `${Math.random() * 300 + 100}px`
-            }}
-          />
-        ))}
-      </div>
-
-      <div className="relative z-10 flex items-center justify-center min-h-[calc(100vh-80px)] px-4 sm:px-6 lg:px-8">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700 p-4">
         <motion.div
-          initial={{ opacity: 0, y: 30 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="w-full max-w-md space-y-8"
+          className="w-full max-w-md"
         >
-          <div className="bg-white/10 backdrop-blur-2xl p-10 rounded-3xl shadow-2xl border border-white/20">
-            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.2 }}>
-              <h2 className="mt-2 text-center text-3xl font-black text-white tracking-tight">
-                Login with OTP
-              </h2>
-              <p className="mt-2 text-center text-sm text-blue-200/80">
-                Secure passwordless access
-              </p>
-            </motion.div>
-
-            {step === 'email' ? (
-              <form className="mt-8 space-y-6" onSubmit={handleSendOTP}>
-                {error && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    className="bg-red-500/20 border border-red-500/50 text-white px-4 py-3 rounded-xl backdrop-blur-md"
-                  >
-                    {error}
-                  </motion.div>
-                )}
-
-                <motion.div initial={{ x: -20, opacity: 0 }} animate={{ x: 0, opacity: 1 }} transition={{ delay: 0.3 }}>
-                  <Input
-                    label="Email address"
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="Enter your email"
-                    required
-                    className="bg-black/20 border-white/10 focus:bg-black/30 text-lg py-5 transition-all hover:bg-black/25"
-                  />
-                </motion.div>
-
-                <motion.div initial={{ y: 20, opacity: 0 }} animate={{ y: 0, opacity: 1 }} transition={{ delay: 0.4 }}>
-                  <Button
-                    type="submit"
-                    className="w-full bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white font-bold py-4 rounded-xl text-lg shadow-lg hover:shadow-xl transition-all border-none"
-                    disabled={loading}
-                  >
-                    {loading ? 'Sending OTP...' : 'Send OTP'}
-                  </Button>
-                </motion.div>
-              </form>
-            ) : (
-              <form className="mt-8 space-y-6" onSubmit={handleVerifyOTP}>
-                {error && (
-                  <div className="bg-red-500/20 border border-red-500/50 text-white px-4 py-3 rounded-xl backdrop-blur-md">
-                    {error}
+          {/* Demo/Test Box */}
+          <AnimatePresence>
+            {demoCode && (
+              <motion.div 
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                className="mb-6 bg-yellow-50 border-2 border-yellow-400 rounded-xl p-4 shadow-lg relative overflow-hidden"
+              >
+                <div className="absolute top-0 right-0 bg-yellow-400 text-yellow-900 text-xs font-bold px-2 py-1 rounded-bl-lg">
+                  DEMO MODE
+                </div>
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="w-6 h-6 text-yellow-600 flex-shrink-0 mt-1" />
+                  <div>
+                    <h3 className="font-bold text-yellow-800 mb-1">Testing Credentials</h3>
+                    <p className="text-sm text-yellow-700 mb-2">
+                      Enter the code below to verify your login.
+                    </p>
+                    <div className="flex items-center gap-4 mt-2">
+                      <div className="bg-white px-4 py-2 rounded border-2 border-dashed border-yellow-300">
+                        <span className="text-2xl font-mono font-bold text-gray-800 tracking-widest">
+                          {demoCode}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1 text-xs font-medium text-yellow-700 bg-yellow-200/50 px-2 py-1 rounded-full">
+                        <Clock className="w-3 h-3" />
+                        Expires in {formatTime(timeLeft)}
+                      </div>
+                    </div>
                   </div>
-                )}
-                <div className="text-sm text-blue-100 bg-white/5 p-4 rounded-xl border border-white/10 text-center">
-                  OTP sent to<br />
-                  <strong className="text-white text-lg">{email}</strong>
                 </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
-                <motion.div initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}>
-                  <Input
-                    label="Enter OTP"
-                    id="otp"
-                    type="text"
-                    value={otp}
-                    onChange={(e) => setOtp(e.target.value.replaceAll(/\D/g, '').slice(0, 6))}
-                    placeholder="• • • • • •"
-                    maxLength={6}
-                    required
-                    className="bg-black/20 border-white/10 focus:bg-black/30 text-2xl text-center tracking-[1em] py-5 font-mono transition-all hover:bg-black/25"
-                  />
-                </motion.div>
+          <div className="bg-white/10 backdrop-blur-xl rounded-2xl shadow-2xl p-8 border border-white/20">
+            <div className="text-center mb-8">
+              <motion.div
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ delay: 0.2, type: "spring", stiffness: 200 }}
+                className="inline-block p-4 bg-white/20 rounded-full mb-4"
+              >
+                {step === 1 ? (
+                   <LogIn className="w-12 h-12 text-white" />
+                ) : (
+                   <KeyRound className="w-12 h-12 text-white" />
+                )}
+              </motion.div>
+              <h1 className="text-3xl font-bold text-white mb-2">Welcome Back</h1>
+              <p className="text-white/80">
+                {step === 1 ? "Enter your email to receive a code" : "Enter the verification code"}
+              </p>
+            </div>
 
-                <div className="flex space-x-4">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="flex-1 bg-transparent border-white/20 text-white hover:bg-white/10"
-                    onClick={() => {
-                      setStep('email');
-                      setOtp('');
-                      setError('');
-                    }}
-                  >
-                    Back
-                  </Button>
+            <AnimatePresence mode="wait">
+              {step === 1 ? (
+                <motion.form
+                  key="step1"
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 20 }}
+                  onSubmit={handleSendOtp}
+                  className="space-y-6"
+                >
+                  <div>
+                    <Label htmlFor="email" className="text-white mb-2 block">Email Address</Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/60" />
+                      <input
+                        id="email"
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required
+                        className="w-full pl-12 pr-4 py-3 bg-white/20 border border-white/30 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 transition-all"
+                        placeholder="your@email.com"
+                      />
+                    </div>
+                  </div>
+
                   <Button
                     type="submit"
-                    className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-bold border-none shadow-lg"
-                    disabled={loading}
+                    disabled={otpLoading}
+                    className="w-full bg-white text-purple-600 hover:bg-white/90 py-3 rounded-lg font-semibold transition-all group"
                   >
-                    {loading ? 'Verifying...' : 'Verify OTP'}
+                    {otpLoading ? 'Generating Code...' : (
+                      <span className="flex items-center justify-center gap-2">
+                        Get Verification Code <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                      </span>
+                    )}
                   </Button>
-                </div>
-              </form>
-            )}
+                </motion.form>
+              ) : (
+                <motion.form
+                  key="step2"
+                  initial={{ opacity: 0, x: 20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  onSubmit={handleVerify}
+                  className="space-y-6"
+                >
+                  <div>
+                    <Label htmlFor="otp" className="text-white mb-2 block">Verification Code</Label>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/60" />
+                      <input
+                        id="otp"
+                        type="text"
+                        value={otp}
+                        onChange={(e) => setOtp(e.target.value)}
+                        required
+                        maxLength={6}
+                        className="w-full pl-12 pr-4 py-3 bg-white/20 border border-white/30 rounded-lg text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50 transition-all tracking-[0.5em] font-mono text-lg"
+                        placeholder="123456"
+                      />
+                    </div>
+                  </div>
+
+                  <Button
+                    type="submit"
+                    disabled={authLoading || otpLoading}
+                    className="w-full bg-white text-purple-600 hover:bg-white/90 py-3 rounded-lg font-semibold transition-all transform hover:scale-105"
+                  >
+                    {authLoading ? 'Verifying...' : 'Verify & Login'}
+                  </Button>
+
+                  <div className="flex justify-between items-center text-sm">
+                    <button
+                      type="button"
+                      onClick={() => setStep(1)}
+                      className="text-white/60 hover:text-white transition-colors"
+                    >
+                      Change Email
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleResend}
+                      disabled={otpLoading}
+                      className="flex items-center gap-1 text-white/80 hover:text-white transition-colors"
+                    >
+                      <RefreshCw className={`w-3 h-3 ${otpLoading ? 'animate-spin' : ''}`} />
+                      Resend Code
+                    </button>
+                  </div>
+                </motion.form>
+              )}
+            </AnimatePresence>
 
             <div className="mt-6 text-center">
-              <Link to="/login" className="text-sm font-medium text-white/50 hover:text-white transition-colors">
-                Back to Password Login
-              </Link>
+              <p className="text-white/80">
+                Don't have an account?{' '}
+                <Link to="/otp-signup" className="text-white font-semibold hover:underline transition-all">
+                  Sign up
+                </Link>
+              </p>
             </div>
           </div>
         </motion.div>
       </div>
-    </div>
+    </>
   );
-}
+};
+
+export default OtpLoginPage;
