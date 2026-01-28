@@ -1,111 +1,122 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { useAuth } from '@/Contexts/AuthContext';
 import { motion } from 'framer-motion';
-import { LogOut, User, LayoutDashboard, CreditCard, PieChart, Bell, Download, Wallet } from 'lucide-react';
+import { LogOut, Menu, X, DollarSign } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { Button } from '@/components/ui/button';
 
-export default function Header() {
-  const { user, logout } = useAuth();
+const Header = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const { userProfile, signOut } = useAuth();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await signOut();
     navigate('/login');
   };
 
   const navItems = [
-    { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-    { name: 'Expenses', path: '/expenses', icon: CreditCard },
-    { name: 'Settlements', path: '/settlements', icon: Wallet },
-    { name: 'Reminders', path: '/reminders', icon: Bell },
-    { name: 'Export', path: '/export', icon: Download },
+    { name: 'Dashboard', path: '/dashboard' },
+    { name: 'Expenses', path: '/expenses' },
+    { name: 'Settlements', path: '/settlements' },
+    { name: 'Reminders', path: '/reminders' },
+    { name: 'Export', path: '/export' },
   ];
 
+  const isActive = (path) => location.pathname === path;
+
   return (
-    <motion.header
-      initial={{ y: -100 }}
-      animate={{ y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="sticky top-0 z-50 bg-white/10 backdrop-blur-xl border-b border-white/20 shadow-lg"
-    >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
-          <Link to="/dashboard" className="flex items-center space-x-2 group">
-            <div className="bg-white/20 p-2 rounded-lg group-hover:bg-white/30 transition-colors">
-              <PieChart className="w-6 h-6 text-white" />
+    <header className="sticky top-0 z-50 bg-white/10 backdrop-blur-xl border-b border-white/20">
+      <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="flex items-center justify-between h-16">
+          <Link to="/dashboard" className="flex items-center space-x-2">
+            <div className="p-2 bg-white/20 rounded-lg">
+              <DollarSign className="w-6 h-6 text-white" />
             </div>
-            <span className="text-xl font-bold text-white bg-clip-text text-transparent bg-gradient-to-r from-white to-white/70">
-              Smart Budget
-            </span>
+            <span className="text-xl font-bold text-white">SplitWise</span>
           </Link>
 
-          <nav className="flex items-center space-x-1 sm:space-x-4">
-            {user ? (
-              <>
-                <div className="hidden md:flex items-center space-x-1">
-                  {navItems.map((item) => {
-                    const isActive = location.pathname === item.path;
-                    return (
-                      <Link
-                        key={item.name}
-                        to={item.path}
-                        className={`
-                          flex items-center px-3 py-2 rounded-lg text-sm font-medium transition-all duration-200
-                          ${isActive
-                            ? 'bg-white/20 text-white shadow-sm'
-                            : 'text-white/70 hover:bg-white/10 hover:text-white'}
-                        `}
-                      >
-                        <item.icon className="w-4 h-4 mr-2" />
-                        {item.name}
-                      </Link>
-                    );
-                  })}
-                </div>
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center space-x-1">
+            {navItems.map((item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                  isActive(item.path)
+                    ? 'bg-white/20 text-white'
+                    : 'text-white/80 hover:bg-white/10 hover:text-white'
+                }`}
+              >
+                {item.name}
+              </Link>
+            ))}
+          </div>
 
-                <div className="flex items-center pl-4 border-l border-white/20 space-x-4">
-                  <div className="hidden sm:flex items-center space-x-2 text-white/90">
-                    <div className="bg-blue-500/20 p-1.5 rounded-full border border-blue-400/30">
-                      <User className="w-4 h-4" />
-                    </div>
-                    <span className="text-sm font-medium max-w-[100px] truncate">
-                      {user.name || user.email?.split('@')[0] || 'User'}
-                    </span>
-                  </div>
+          <div className="hidden md:flex items-center space-x-4">
+            <span className="text-white/80 text-sm">{userProfile?.name}</span>
+            <Button
+              onClick={handleLogout}
+              variant="ghost"
+              className="text-white hover:bg-white/20"
+            >
+              <LogOut className="w-4 h-4 mr-2" />
+              Logout
+            </Button>
+          </div>
 
-                  <button
-                    onClick={handleLogout}
-                    className="flex items-center justify-center p-2 rounded-lg text-white/70 hover:text-red-400 hover:bg-white/10 transition-colors"
-                    title="Logout"
-                  >
-                    <LogOut className="w-5 h-5" />
-                  </button>
-                </div>
-              </>
-            ) : (
-              <div className="flex items-center space-x-3">
-                <Link
-                  to="/login"
-                  className="text-white/80 hover:text-white font-medium text-sm transition-colors"
-                >
-                  Login
-                </Link>
-                <Link to="/signup">
-                  <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
-                    className="bg-white/20 hover:bg-white/30 text-white px-4 py-2 rounded-lg text-sm font-bold border border-white/20 shadow-lg backdrop-blur-sm transition-all"
-                  >
-                    Sign Up
-                  </motion.button>
-                </Link>
-              </div>
-            )}
-          </nav>
+          {/* Mobile menu button */}
+          <button
+            onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            className="md:hidden p-2 rounded-lg text-white hover:bg-white/20 transition-all"
+          >
+            {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
         </div>
-      </div>
-    </motion.header>
-  );
-}
 
+        {/* Mobile Navigation */}
+        {mobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            className="md:hidden pb-4"
+          >
+            <div className="flex flex-col space-y-2">
+              {navItems.map((item) => (
+                <Link
+                  key={item.path}
+                  to={item.path}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                    isActive(item.path)
+                      ? 'bg-white/20 text-white'
+                      : 'text-white/80 hover:bg-white/10 hover:text-white'
+                  }`}
+                >
+                  {item.name}
+                </Link>
+              ))}
+              <div className="pt-2 border-t border-white/20">
+                <div className="px-4 py-2 text-white/80 text-sm">{userProfile?.name}</div>
+                <button
+                  onClick={() => {
+                    handleLogout();
+                    setMobileMenuOpen(false);
+                  }}
+                  className="w-full text-left px-4 py-2 rounded-lg text-sm font-medium text-white/80 hover:bg-white/10 hover:text-white transition-all"
+                >
+                  <LogOut className="w-4 h-4 inline mr-2" />
+                  Logout
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </nav>
+    </header>
+  );
+};
+
+export default Header;

@@ -12,12 +12,12 @@ const OtpLoginPage = () => {
   const navigate = useNavigate();
   const { signIn } = useAuth();
   const { generateAndSendOtp, verifyOtp, resendOtp, loading: otpLoading } = useOtp();
-  
+
   const [step, setStep] = useState(1);
   const [email, setEmail] = useState('');
   const [otp, setOtp] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
-  
+
   // Demo Mode State
   const [demoCode, setDemoCode] = useState(null);
   const [timeLeft, setTimeLeft] = useState(0);
@@ -43,7 +43,7 @@ const OtpLoginPage = () => {
   const handleSendOtp = async (e) => {
     e.preventDefault();
     if (!email) return;
-    
+
     const result = await generateAndSendOtp(email, 'login');
     if (result.success) {
       setDemoCode(result.code);
@@ -62,7 +62,7 @@ const OtpLoginPage = () => {
     if (verifyResult.success) {
       // 2. Authenticate with Supabase using the OTP as the temporary password
       const { error } = await signIn(email, otp);
-      
+
       if (!error) {
         navigate('/dashboard');
       }
@@ -85,7 +85,13 @@ const OtpLoginPage = () => {
         <meta name="description" content="Secure login with OTP" />
       </Helmet>
 
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700 p-4">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.5 }}
+        className="min-h-screen flex items-center justify-center p-4 relative"
+      >
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -95,7 +101,7 @@ const OtpLoginPage = () => {
           {/* Demo/Test Box */}
           <AnimatePresence>
             {demoCode && (
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.9 }}
@@ -137,9 +143,9 @@ const OtpLoginPage = () => {
                 className="inline-block p-4 bg-white/20 rounded-full mb-4"
               >
                 {step === 1 ? (
-                   <LogIn className="w-12 h-12 text-white" />
+                  <LogIn className="w-12 h-12 text-white" />
                 ) : (
-                   <KeyRound className="w-12 h-12 text-white" />
+                  <KeyRound className="w-12 h-12 text-white" />
                 )}
               </motion.div>
               <h1 className="text-3xl font-bold text-white mb-2">Welcome Back</h1>
@@ -252,7 +258,7 @@ const OtpLoginPage = () => {
             </div>
           </div>
         </motion.div>
-      </div>
+      </motion.div>
     </>
   );
 };

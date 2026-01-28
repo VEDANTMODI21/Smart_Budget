@@ -112,7 +112,13 @@ export default function ExpenseTracker() {
   const totalExpense = expenses.reduce((sum, expense) => sum + parseFloat(expense.amount || 0), 0);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700">
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      transition={{ duration: 0.5 }}
+      className="min-h-screen relative"
+    >
       <Helmet>
         <title>Expenses - Smart Budget</title>
       </Helmet>
@@ -317,6 +323,6 @@ export default function ExpenseTracker() {
           </motion.div>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 }

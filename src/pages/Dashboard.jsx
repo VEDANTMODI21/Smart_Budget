@@ -148,7 +148,7 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700">
+      <div className="min-h-screen flex items-center justify-center">
         <Header />
         <div className="flex items-center justify-center min-h-[80vh]">
           <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-white"></div>
@@ -164,7 +164,13 @@ const Dashboard = () => {
         <meta name="description" content="View your expense dashboard and track settlements" />
       </Helmet>
 
-      <div className="min-h-screen bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.5 }}
+        className="min-h-screen relative"
+      >
         <Header />
 
         <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
@@ -316,7 +322,7 @@ const Dashboard = () => {
             </motion.div>
           </div>
         </div>
-      </div>
+      </motion.div>
     </>
   );
 };

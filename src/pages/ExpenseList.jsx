@@ -127,7 +127,7 @@ const ExpenseList = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700">
+      <div className="min-h-screen flex items-center justify-center">
         <Header />
         <div className="flex items-center justify-center min-h-[80vh]">
           <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-white"></div>
@@ -143,7 +143,13 @@ const ExpenseList = () => {
         <meta name="description" content="Manage and track all your shared expenses" />
       </Helmet>
 
-      <div className="min-h-screen bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.5 }}
+        className="min-h-screen relative"
+      >
         <Header />
 
         <div className="max-w-7xl mx-auto px-4 py-16 sm:px-6 lg:px-8">
@@ -292,7 +298,7 @@ const ExpenseList = () => {
             )}
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Delete Confirmation Modal */}
       <AnimatePresence>
@@ -310,14 +316,14 @@ const ExpenseList = () => {
                     <AlertTriangle className="w-6 h-6 mr-2" />
                     <h3 className="text-lg font-bold">Confirm Deletion</h3>
                   </div>
-                  <button 
+                  <button
                     onClick={() => setDeleteConfirm({ isOpen: false, expenseId: null })}
                     className="text-gray-400 hover:text-gray-600 transition-colors"
                   >
                     <X className="w-5 h-5" />
                   </button>
                 </div>
-                
+
                 <p className="text-gray-600 mb-6">
                   Are you sure you want to delete this expense? This action cannot be undone.
                 </p>

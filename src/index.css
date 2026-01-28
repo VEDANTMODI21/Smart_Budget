@@ -11,11 +11,13 @@
 body {
 	font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
 	min-height: 100vh;
+    background: transparent; /* Ensure body is transparent to show fixed background */
 }
 
 /* ensure root fills the viewport so background is visible */
 #root {
 	min-height: 100vh;
+    background: transparent;
 }
 
 /* Fix for Chrome/Edge autofill in dark mode */

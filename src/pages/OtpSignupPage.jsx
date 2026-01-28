@@ -12,7 +12,7 @@ const OtpSignupPage = () => {
   const navigate = useNavigate();
   const { signUp } = useAuth();
   const { generateAndSendOtp, verifyOtp, resendOtp, loading: otpLoading } = useOtp();
-  
+
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     email: '',
@@ -50,7 +50,7 @@ const OtpSignupPage = () => {
   const handleSendOtp = async (e) => {
     e.preventDefault();
     if (!formData.email || !formData.name) return;
-    
+
     const result = await generateAndSendOtp(formData.email, 'signup');
     if (result.success) {
       setDemoCode(result.code);
@@ -70,7 +70,7 @@ const OtpSignupPage = () => {
       // 2. Create user account
       // We use the OTP as the password so that the login flow (which sets pass to OTP) stays consistent
       const { error } = await signUp(formData.email, formData.otp, formData.name);
-      
+
       if (!error) {
         navigate('/dashboard');
       }
@@ -93,7 +93,13 @@ const OtpSignupPage = () => {
         <meta name="description" content="Create an account using OTP verification" />
       </Helmet>
 
-      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-600 via-purple-600 to-pink-600 p-4">
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        transition={{ duration: 0.5 }}
+        className="min-h-screen flex items-center justify-center p-4 relative"
+      >
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -103,7 +109,7 @@ const OtpSignupPage = () => {
           {/* Demo/Test Box */}
           <AnimatePresence>
             {demoCode && (
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0, y: -20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.9 }}
@@ -162,7 +168,7 @@ const OtpSignupPage = () => {
                   onSubmit={handleSendOtp}
                   className="space-y-5"
                 >
-                   <div>
+                  <div>
                     <Label htmlFor="name" className="text-white mb-2 block">Full Name</Label>
                     <div className="relative">
                       <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-white/60" />
@@ -275,7 +281,7 @@ const OtpSignupPage = () => {
             </div>
           </div>
         </motion.div>
-      </div>
+      </motion.div>
     </>
   );
 };
