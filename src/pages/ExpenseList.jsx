@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Edit, Trash2, Filter, AlertTriangle, X } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/Contexts/AuthContext';
 import { supabase } from '@/lib/customSupabaseClient';
 import Header from '@/components/Header';
 import ExpenseForm from '@/components/ExpenseForm';

@@ -3,8 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, Lock, UserPlus, User, ArrowRight, RefreshCw, AlertTriangle, Clock } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
-import { useOtp } from '@/contexts/OtpContext';
+import { useAuth } from '@/Contexts/AuthContext';
+import { useOtp } from '@/Contexts/OtpContext';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 

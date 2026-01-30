@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet';
 import { motion } from 'framer-motion';
 import { Download, FileText, Share2, Link as LinkIcon } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/Contexts/AuthContext';
 import { supabase } from '@/lib/customSupabaseClient';
 import Header from '@/components/Header';
 import { Button } from '@/components/ui/button';

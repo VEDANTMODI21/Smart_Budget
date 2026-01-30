@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet';
 import { motion } from 'framer-motion';
 import { CheckCircle, Circle } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/Contexts/AuthContext';
 import { supabase } from '@/lib/customSupabaseClient';
 import Header from '@/components/Header';
 import { useToast } from '@/components/ui/use-toast';
@@ -37,7 +37,7 @@ const SettlementTracker = () => {
 
       // Group by debtor and creditor
       const settlementMap = {};
-      
+
       participants?.forEach((participant) => {
         const debtorId = participant.user_id;
         const creditorId = participant.expenses.user_id;
@@ -73,7 +73,7 @@ const SettlementTracker = () => {
     try {
       // Update all participants for this settlement
       const participantIds = settlement.participants.map(p => p.id);
-      
+
       const { error } = await supabase
         .from('expense_participants')
         .update({ paid_status: true })

@@ -10,6 +10,7 @@ import OtpLoginPage from '@/pages/OtpLoginPage';
 import OtpSignupPage from '@/pages/OtpSignupPage';
 import Dashboard from '@/pages/Dashboard';
 import ExpenseList from '@/pages/ExpenseList';
+import ExpenseTracker from '@/pages/ExpenseTracker';
 import SettlementTracker from '@/pages/SettlementTracker';
 import ReminderNotification from '@/pages/ReminderNotification';
 import ExportFeature from '@/pages/ExportFeature';
@@ -45,6 +46,14 @@ const AppRoutes = () => {
           element={
             <ProtectedRoute>
               <ExpenseList />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/expenses-tracker"
+          element={
+            <ProtectedRoute>
+              <ExpenseTracker />
             </ProtectedRoute>
           }
         />
