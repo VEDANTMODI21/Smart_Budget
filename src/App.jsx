@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AnimatePresence } from 'framer-motion';
 import { AuthProvider } from '@/Contexts/AuthContext';
+import { OtpProvider } from '@/Contexts/OtpContext';
 import { Toaster } from '@/components/ui/toaster';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import LoginPage from '@/pages/LoginPage';
@@ -18,6 +19,13 @@ import SharedExpenseView from '@/pages/SharedExpenseView';
 import GlobalReminderHandler from '@/components/GlobalReminderHandler';
 import AnimatedBackground from '@/components/AnimatedBackground';
 
+// Loading Component
+const PageLoader = () => (
+  <div className="min-h-screen flex items-center justify-center bg-slate-900">
+    <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-purple-500"></div>
+  </div>
+);
+
 const AppRoutes = () => {
   const location = useLocation();
 
@@ -25,14 +33,14 @@ const AppRoutes = () => {
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        {/* Redirects for legacy routes */}
+
+        {/* Auth Routes */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
-
-        {/* New OTP Routes */}
         <Route path="/otp-login" element={<OtpLoginPage />} />
         <Route path="/otp-signup" element={<OtpSignupPage />} />
 
+        {/* Protected Routes */}
         <Route
           path="/dashboard"
           element={
@@ -81,7 +89,12 @@ const AppRoutes = () => {
             </ProtectedRoute>
           }
         />
+
+        {/* Public Share Route */}
         <Route path="/share/:token" element={<SharedExpenseView />} />
+
+        {/* 404 Redirect */}
+        <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>
     </AnimatePresence>
   );
@@ -90,12 +103,18 @@ const AppRoutes = () => {
 function App() {
   return (
     <AuthProvider>
-      <Router>
-        <AnimatedBackground />
-        <GlobalReminderHandler />
-        <AppRoutes />
-        <Toaster />
-      </Router>
+      <OtpProvider>
+        <Router>
+          <div className="relative min-h-screen">
+            <AnimatedBackground />
+            <GlobalReminderHandler />
+            <Suspense fallback={<PageLoader />}>
+              <AppRoutes />
+            </Suspense>
+            <Toaster />
+          </div>
+        </Router>
+      </OtpProvider>
     </AuthProvider>
   );
 }
