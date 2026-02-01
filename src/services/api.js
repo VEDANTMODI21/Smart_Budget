@@ -1,4 +1,15 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+const getApiUrl = () => {
+  if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
+
+  // Auto-detect based on current URL to support network access
+  const hostname = window.location.hostname;
+  if (hostname === 'localhost' || hostname === '127.0.0.1') {
+    return 'http://localhost:5000';
+  }
+  return `http://${hostname}:5000`;
+};
+
+const API_URL = getApiUrl();
 
 // Helper function to get auth headers
 const getAuthHeaders = () => {

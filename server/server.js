@@ -19,9 +19,9 @@ app.use(cors());
 app.use(express.json());
 
 // MongoDB Connection
-const MONGO_URI = process.env.MONGO_URI || 'mongodb://localhost:27017/smartbudget';
+const MONGODB_URI = process.env.MONGODB_URI || process.env.MONGO_URI || 'mongodb://localhost:27017/smartbudget';
 
-mongoose.connect(MONGO_URI)
+mongoose.connect(MONGODB_URI)
   .then(() => console.log('✅ MongoDB connected'))
   .catch(err => console.log('❌ MongoDB error:', err.message));
 
@@ -95,19 +95,19 @@ app.get('/api/health', (req, res) => {
 app.post('/api/auth/signup', async (req, res) => {
   try {
     const { fullName, email, password } = req.body;
-    
+
     if (!fullName || !email || !password) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         success: false,
-        error: 'All fields required' 
+        error: 'All fields required'
       });
     }
 
     const existingUser = await User.findOne({ email });
     if (existingUser) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         success: false,
-        error: 'Email already exists' 
+        error: 'Email already exists'
       });
     }
 
@@ -127,19 +127,19 @@ app.post('/api/auth/signup', async (req, res) => {
 app.post('/api/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body;
-    
+
     if (!email || !password) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         success: false,
-        error: 'Email and password required' 
+        error: 'Email and password required'
       });
     }
 
     const user = await User.findOne({ email, password });
     if (!user) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         success: false,
-        error: 'Invalid credentials' 
+        error: 'Invalid credentials'
       });
     }
 
@@ -157,20 +157,20 @@ app.post('/api/auth/login', async (req, res) => {
 app.post('/api/auth/send-otp', async (req, res) => {
   try {
     const { email } = req.body;
-    
+
     if (!email) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         success: false,
-        error: 'Email required' 
+        error: 'Email required'
       });
     }
 
     // Check if email exists (for login flow)
     const user = await User.findOne({ email });
     if (!user) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         success: false,
-        error: 'Email not found. Please sign up first.' 
+        error: 'Email not found. Please sign up first.'
       });
     }
 
@@ -224,11 +224,11 @@ app.post('/api/auth/send-otp', async (req, res) => {
 app.post('/api/auth/verify-otp', async (req, res) => {
   try {
     const { email, otp } = req.body;
-    
+
     if (!email || !otp) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         success: false,
-        error: 'Email and OTP required' 
+        error: 'Email and OTP required'
       });
     }
 
@@ -236,18 +236,18 @@ app.post('/api/auth/verify-otp', async (req, res) => {
     const otpRecord = await OTP.findOne({ email, otp });
 
     if (!otpRecord) {
-      return res.status(400).json({ 
+      return res.status(400).json({
         success: false,
-        error: 'Invalid OTP' 
+        error: 'Invalid OTP'
       });
     }
 
     // Check if OTP expired
     if (new Date() > otpRecord.expiresAt) {
       await OTP.deleteOne({ _id: otpRecord._id });
-      return res.status(400).json({ 
+      return res.status(400).json({
         success: false,
-        error: 'OTP expired. Please request a new one.' 
+        error: 'OTP expired. Please request a new one.'
       });
     }
 
@@ -261,10 +261,10 @@ app.post('/api/auth/verify-otp', async (req, res) => {
       success: true,
       message: 'OTP verified successfully',
       token: 'token_' + Date.now(),
-      user: { 
-        id: user._id, 
-        fullName: user.fullName, 
-        email: user.email 
+      user: {
+        id: user._id,
+        fullName: user.fullName,
+        email: user.email
       }
     });
   } catch (error) {
@@ -285,7 +285,7 @@ app.get('*', (req, res) => {
 app.listen(PORT, '0.0.0.0', () => {
   const networkInterfaces = os.networkInterfaces();
   let ipAddress = 'localhost';
-  
+
   for (const name of Object.keys(networkInterfaces)) {
     for (const iface of networkInterfaces[name]) {
       if (iface.family === 'IPv4' && !iface.internal) {
@@ -294,7 +294,7 @@ app.listen(PORT, '0.0.0.0', () => {
       }
     }
   }
-  
+
   console.log(`✅ Server running on http://${ipAddress}:${PORT}`);
   console.log(`📧 Email: ${process.env.EMAIL_USER}`);
   console.log(`🔗 Network access: http://${ipAddress}:${PORT}`);
