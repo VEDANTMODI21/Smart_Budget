@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
-import { supabase } from '@/lib/customSupabaseClient';
+import { api } from '@/services/api'; // Use MongoDB API instead of Supabase
 import { useToast } from '@/components/ui/use-toast';
 
 const OtpContext = createContext(undefined);
@@ -8,41 +8,29 @@ export const OtpProvider = ({ children }) => {
   const { toast } = useToast();
   const [loading, setLoading] = useState(false);
 
-  const generateAndSendOtp = useCallback(async (email, type = 'login') => {
+  const generateAndSendOtp = useCallback(async (email, name = '') => {
     setLoading(true);
     try {
-      // 1. Generate random 6-digit code locally for Demo Mode
-      const code = Math.floor(100000 + Math.random() * 900000).toString();
-      
-      // 2. Set expiration (10 minutes from now)
-      const expiresAt = new Date(Date.now() + 10 * 60 * 1000);
+      // Use MongoDB backend to generate and send OTP
+      const result = await api.generateOTP(email);
 
-      // 3. Store in Supabase 'otps' table
-      const { error } = await supabase
-        .from('otps')
-        .insert({
-          email,
-          code,
-          expires_at: expiresAt.toISOString(),
-          verified: false
-        });
-
-      if (error) throw error;
-
-      // For Demo/Test mode: We return the code so it can be displayed in the UI
-      // In production, this would be sent via email and NOT returned to the client
       toast({
-        title: "OTP Generated",
-        description: "See the demo box for your verification code.",
+        title: "OTP Sent",
+        description: result.message || "Please check your email for the verification code.",
       });
 
-      return { success: true, code };
+      // Special handling for development: backend might return the OTP
+      return {
+        success: true,
+        code: result.otp || result.code, // Support both naming conventions
+        previewUrl: result.previewUrl
+      };
     } catch (error) {
       console.error('Error generating OTP:', error);
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to generate verification code.",
+        description: error.message || "Failed to generate verification code.",
       });
       return { success: false, error };
     } finally {
@@ -50,43 +38,24 @@ export const OtpProvider = ({ children }) => {
     }
   }, [toast]);
 
-  const verifyOtp = useCallback(async (email, code) => {
+  const verifyOtp = useCallback(async (email, code, name = null) => {
     setLoading(true);
     try {
-      // 1. Check if OTP exists, is valid, matches email, and is not expired
-      const { data, error } = await supabase
-        .from('otps')
-        .select('*')
-        .eq('email', email)
-        .eq('code', code)
-        .eq('verified', false) // Check it hasn't been used
-        .gt('expires_at', new Date().toISOString()) // Check expiration
-        .order('created_at', { ascending: false })
-        .limit(1)
-        .single();
-
-      if (error || !data) {
-        throw new Error("Invalid or expired code");
-      }
-
-      // 2. Mark as verified
-      await supabase
-        .from('otps')
-        .update({ verified: true })
-        .eq('id', data.id);
+      // Use MongoDB backend to verify OTP
+      const result = await api.verifyOTP(email, code, name);
 
       toast({
         title: "Verified",
-        description: "Code verified successfully",
+        description: result.message || "Code verified successfully",
       });
 
-      return { success: true };
+      return { success: true, user: result.user, token: result.token };
     } catch (error) {
       console.error('Error verifying OTP:', error);
       toast({
         variant: "destructive",
         title: "Verification Failed",
-        description: error.message || "Invalid code",
+        description: error.message || "Invalid or expired code",
       });
       return { success: false, error };
     } finally {
@@ -94,8 +63,8 @@ export const OtpProvider = ({ children }) => {
     }
   }, [toast]);
 
-  const resendOtp = useCallback(async (email, type) => {
-    return generateAndSendOtp(email, type);
+  const resendOtp = useCallback(async (email, name) => {
+    return generateAndSendOtp(email, name);
   }, [generateAndSendOtp]);
 
   return (
