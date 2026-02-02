@@ -174,8 +174,13 @@ app.post('/api/auth/send-otp', async (req, res) => {
       });
     }
 
-    // Generate OTP
-    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+    // Generate OTP using otp-generator
+    const otp = otpGenerator.generate(6, {
+      upperCaseAlphabets: false,
+      specialChars: false,
+      lowerCaseAlphabets: false,
+      digits: true
+    });
 
     // Delete old OTP for this email
     await OTP.deleteMany({ email });
@@ -186,20 +191,30 @@ app.post('/api/auth/send-otp', async (req, res) => {
 
     // Send OTP to user's email
     const mailOptions = {
-      from: process.env.EMAIL_USER,
+      from: process.env.EMAIL_USER || '"Smart Budget" <noreply@smartbudget.com>',
       to: email,
       subject: 'Smart Budget - Your OTP Code',
       html: `
-        <div style="font-family: Arial, sans-serif; padding: 20px;">
-          <h2>Smart Budget OTP Verification</h2>
-          <p>Your One-Time Password (OTP) is:</p>
-          <h1 style="color: #007bff; letter-spacing: 5px;">${otp}</h1>
-          <p>This OTP will expire in 10 minutes.</p>
-          <p><strong>Do not share this OTP with anyone.</strong></p>
-          <hr/>
-          <p style="color: #666; font-size: 12px;">If you didn't request this OTP, please ignore this email.</p>
+        <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e2e8f0; border-radius: 12px; overflow: hidden;">
+          <div style="background-color: #7c3aed; padding: 30px; text-align: center;">
+            <h1 style="color: white; margin: 0; font-size: 28px;">Smart Budget</h1>
+          </div>
+          <div style="padding: 40px 30px; background-color: white;">
+            <h2 style="color: #1e293b; margin-top: 0;">OTP Verification</h2>
+            <p style="color: #475569; font-size: 16px; line-height: 1.6;">Hello,</p>
+            <p style="color: #475569; font-size: 16px; line-height: 1.6;">Your One-Time Password (OTP) for login is:</p>
+            <div style="background-color: #f8fafc; padding: 30px; text-align: center; border-radius: 12px; margin: 30px 0; border: 2px dashed #cbd5e1;">
+              <h1 style="color: #7c3aed; font-size: 42px; margin: 0; letter-spacing: 10px; font-weight: bold;">${otp}</h1>
+            </div>
+            <p style="color: #475569; font-size: 16px; line-height: 1.6;">This code is valid for <strong>10 minutes</strong>. Do not share this code with anyone.</p>
+            <p style="color: #94a3b8; font-size: 14px; margin-top: 30px;">If you didn't request this code, you can safely ignore this email.</p>
+          </div>
+          <div style="background-color: #f8fafc; padding: 20px; text-align: center; border-top: 1px solid #e2e8f0;">
+            <p style="color: #94a3b8; font-size: 12px; margin: 0;">&copy; ${new Date().getFullYear()} Smart Budget App. All rights reserved.</p>
+          </div>
         </div>
-      `
+      `,
+      text: `Your Smart Budget OTP Code is: ${otp}\n\nThis code is valid for 10 minutes.\n\nIf you didn't request this code, please ignore this email.`
     };
 
     transporter.sendMail(mailOptions, (error, info) => {
@@ -213,7 +228,7 @@ app.post('/api/auth/send-otp', async (req, res) => {
       console.log(`✅ OTP sent to ${email}`);
       res.json({
         success: true,
-        message: `OTP sent to ${email}. Check your email.`
+        message: `OTP sent to ${email}. Please check your inbox.`
       });
     });
   } catch (error) {

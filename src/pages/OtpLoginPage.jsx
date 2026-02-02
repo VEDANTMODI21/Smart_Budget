@@ -18,8 +18,6 @@ const OtpLoginPage = () => {
   const [otp, setOtp] = useState('');
   const [authLoading, setAuthLoading] = useState(false);
 
-  // Demo Mode State
-  const [demoCode, setDemoCode] = useState(null);
   const [timeLeft, setTimeLeft] = useState(0);
 
   useEffect(() => {
@@ -28,11 +26,9 @@ const OtpLoginPage = () => {
       timer = setInterval(() => {
         setTimeLeft((prev) => prev - 1);
       }, 1000);
-    } else if (timeLeft === 0 && demoCode) {
-      setDemoCode(null); // Expire the visual code
     }
     return () => clearInterval(timer);
-  }, [timeLeft, demoCode]);
+  }, [timeLeft]);
 
   const formatTime = (seconds) => {
     const m = Math.floor(seconds / 60);
@@ -46,7 +42,6 @@ const OtpLoginPage = () => {
 
     const result = await generateAndSendOtp(email, 'login');
     if (result.success) {
-      setDemoCode(result.code);
       setTimeLeft(600); // 10 minutes
       setStep(2);
     }
@@ -73,7 +68,6 @@ const OtpLoginPage = () => {
   const handleResend = async () => {
     const result = await resendOtp(email, 'login');
     if (result.success) {
-      setDemoCode(result.code);
       setTimeLeft(600);
     }
   };
@@ -98,41 +92,6 @@ const OtpLoginPage = () => {
           transition={{ duration: 0.6 }}
           className="w-full max-w-md"
         >
-          {/* Demo/Test Box */}
-          <AnimatePresence>
-            {demoCode && (
-              <motion.div
-                initial={{ opacity: 0, y: -20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.9 }}
-                className="mb-6 bg-yellow-50 border-2 border-yellow-400 rounded-xl p-4 shadow-lg relative overflow-hidden"
-              >
-                <div className="absolute top-0 right-0 bg-yellow-400 text-yellow-900 text-xs font-bold px-2 py-1 rounded-bl-lg">
-                  DEMO MODE
-                </div>
-                <div className="flex items-start gap-3">
-                  <AlertTriangle className="w-6 h-6 text-yellow-600 flex-shrink-0 mt-1" />
-                  <div>
-                    <h3 className="font-bold text-yellow-800 mb-1">Testing Credentials</h3>
-                    <p className="text-sm text-yellow-700 mb-2">
-                      Enter the code below to verify your login.
-                    </p>
-                    <div className="flex items-center gap-4 mt-2">
-                      <div className="bg-white px-4 py-2 rounded border-2 border-dashed border-yellow-300">
-                        <span className="text-2xl font-mono font-bold text-gray-800 tracking-widest">
-                          {demoCode}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-1 text-xs font-medium text-yellow-700 bg-yellow-200/50 px-2 py-1 rounded-full">
-                        <Clock className="w-3 h-3" />
-                        Expires in {formatTime(timeLeft)}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
 
           <div className="bg-white/10 backdrop-blur-xl rounded-2xl shadow-2xl p-8 border border-white/20">
             <div className="text-center mb-8">

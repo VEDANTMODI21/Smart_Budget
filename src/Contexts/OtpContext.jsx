@@ -19,10 +19,9 @@ export const OtpProvider = ({ children }) => {
         description: result.message || "Please check your email for the verification code.",
       });
 
-      // Special handling for development: backend might return the OTP
+      // OTP is no longer returned in the response for security
       return {
         success: true,
-        code: result.otp || result.code, // Support both naming conventions
         previewUrl: result.previewUrl
       };
     } catch (error) {
