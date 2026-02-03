@@ -59,18 +59,19 @@ const OtpSignupPage = () => {
     if (!formData.otp) return;
     setAuthLoading(true);
 
-    const verifyResult = await verifyOtp(formData.email, formData.otp);
+    try {
+      // Use loginWithOTP which handles verification and user creation/login in one step
+      const result = await loginWithOTP(formData.email, formData.otp, formData.name);
 
-    if (verifyResult.success) {
-      // 2. Create user account
-      // We use the OTP as the password so that the login flow (which sets pass to OTP) stays consistent
-      const { error } = await signUp(formData.email, formData.otp, formData.name);
-
-      if (!error) {
+      if (result.data) {
         navigate('/dashboard');
       }
+    } catch (error) {
+      // Error is already handled by toast in AuthContext
+      console.error('Verification failed:', error);
+    } finally {
+      setAuthLoading(false);
     }
-    setAuthLoading(false);
   };
 
   const handleResend = async () => {

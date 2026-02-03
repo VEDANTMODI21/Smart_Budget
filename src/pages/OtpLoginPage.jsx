@@ -52,17 +52,19 @@ const OtpLoginPage = () => {
     if (!otp) return;
     setAuthLoading(true);
 
-    const verifyResult = await verifyOtp(email, otp);
+    try {
+      // Use loginWithOTP which handles verification and session creation in one step
+      const result = await loginWithOTP(email, otp);
 
-    if (verifyResult.success) {
-      // 2. Authenticate with Supabase using the OTP as the temporary password
-      const { error } = await signIn(email, otp);
-
-      if (!error) {
+      if (result.data) {
         navigate('/dashboard');
       }
+    } catch (error) {
+      // Error is already handled by toast in AuthContext
+      console.error('Login verification failed:', error);
+    } finally {
+      setAuthLoading(false);
     }
-    setAuthLoading(false);
   };
 
   const handleResend = async () => {
