@@ -198,10 +198,19 @@ router.post('/otp/generate', async (req, res) => {
       // Still return success, but include OTP in dev mode as fallback
     }
 
+    let message = 'OTP generated successfully.';
+    if (emailResult.success) {
+      if (emailResult.previewUrl) {
+        message = 'OTP generated. Since email is not configured, you can view it at the preview link (check terminal).';
+      } else {
+        message = 'OTP sent to your email. Please check your inbox (and spam folder).';
+      }
+    } else {
+      message = 'OTP generated but email sending failed. If this is a development environment, check the server terminal for the code.';
+    }
+
     res.json({
-      message: emailResult.success
-        ? 'OTP sent to your email. Please check your inbox (and spam folder).'
-        : 'OTP generated but email sending failed. Check server logs.',
+      message,
       // Stop returning the OTP in the response for security and to meet user requirements
       otp: undefined,
       previewUrl: emailResult.previewUrl, // Include preview URL only if using Ethereal

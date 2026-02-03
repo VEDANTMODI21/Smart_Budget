@@ -5,62 +5,58 @@ dotenv.config();
 
 // Create email transporter
 let transporter = null;
-let isInitializing = false;
 
 // Initialize email transporter
+let initializationPromise = null;
+
 async function initEmailTransporter() {
   if (transporter) return transporter;
-  if (isInitializing) return null;
+  if (initializationPromise) return initializationPromise;
 
-  isInitializing = true;
-
-  // If Gmail credentials are provided, use Gmail
-  if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+  initializationPromise = (async () => {
     try {
-      transporter = nodemailer.createTransport({
-        service: 'gmail',
-        host: 'smtp.gmail.com',
-        port: 465,
-        secure: true,
+      // If Gmail credentials are provided, use Gmail
+      if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+        console.log('🔄 Attempting to configure Gmail service...');
+        const gmailTransporter = nodemailer.createTransport({
+          service: 'gmail',
+          auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS // App password, not regular password
+          }
+        });
+
+        // Verify transporter
+        await gmailTransporter.verify();
+        transporter = gmailTransporter;
+        console.log('✅ Email service: Gmail configured and verified');
+        return transporter;
+      }
+
+      // Otherwise, use Ethereal Email (free testing service)
+      console.log('🔄 No Gmail credentials found. Creating Ethereal test account...');
+      const testAccount = await nodemailer.createTestAccount();
+      const etherealTransporter = nodemailer.createTransport({
+        host: 'smtp.ethereal.email',
+        port: 587,
+        secure: false,
         auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASS // App password, not regular password
+          user: testAccount.user,
+          pass: testAccount.pass
         }
       });
-
-      // Verify transporter
-      await transporter.verify();
-      console.log('📧 Email service: Gmail configured and verified');
-      isInitializing = false;
+      transporter = etherealTransporter;
+      console.log('📧 Email service: Ethereal (testing) configured');
+      console.log('📧 Test account:', testAccount.user);
       return transporter;
     } catch (error) {
-      console.error('❌ Gmail transporter verification failed:', error.message);
-      // Fallback to Ethereal will happen below
+      console.error('❌ Failed to create email transporter:', error.message);
+      initializationPromise = null; // Allow retry on next call
+      return null;
     }
-  }
+  })();
 
-  // Otherwise, use Ethereal Email (free testing service)
-  try {
-    console.log('🔄 Creating Ethereal test account (this may take a few seconds)...');
-    const testAccount = await nodemailer.createTestAccount();
-    transporter = nodemailer.createTransport({
-      host: 'smtp.ethereal.email',
-      port: 587,
-      secure: false,
-      auth: {
-        user: testAccount.user,
-        pass: testAccount.pass
-      }
-    });
-    console.log('📧 Email service: Ethereal (testing) configured');
-    console.log('📧 Test account created:', testAccount.user);
-    isInitializing = false;
-    return transporter;
-  } catch (error) {
-    console.error('❌ Failed to create email transporter:', error);
-    isInitializing = false;
-    return null;
-  }
+  return initializationPromise;
 }
 
 // Send OTP email
@@ -105,8 +101,15 @@ export async function sendOTPEmail(email, otp) {
 
     const info = await transporter.sendMail(mailOptions);
 
+    // Development fallback: Log OTP to console
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('-----------------------------------------');
+      console.log('DEBUG: OTP for', email, 'is:', otp);
+      console.log('-----------------------------------------');
+    }
+
     // If using Ethereal, log the preview URL
-    if (info.envelope && info.envelope.from && info.envelope.from.includes('ethereal.email')) {
+    if (info.envelope && info.envelope.from && (info.envelope.from.includes('ethereal.email') || info.envelope.from.includes('test'))) {
       const previewUrl = nodemailer.getTestMessageUrl(info);
       if (previewUrl) {
         console.log('📧 Ethereal Preview URL:', previewUrl);
