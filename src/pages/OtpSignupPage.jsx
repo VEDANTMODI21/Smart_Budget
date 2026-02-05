@@ -10,8 +10,8 @@ import { Label } from '@/components/ui/label';
 
 const OtpSignupPage = () => {
   const navigate = useNavigate();
-  const { signUp } = useAuth();
-  const { generateAndSendOtp, verifyOtp, resendOtp, loading: otpLoading } = useOtp();
+  const { signUp, loginWithOTP } = useAuth();
+  const { generateAndSendOtp, resendOtp, loading: otpLoading } = useOtp();
 
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
@@ -49,6 +49,9 @@ const OtpSignupPage = () => {
 
     const result = await generateAndSendOtp(formData.email, 'signup');
     if (result.success) {
+      if (result.previewUrl) {
+        window.open(result.previewUrl, '_blank');
+      }
       setTimeLeft(600); // 10 minutes
       setStep(2);
     }

@@ -16,13 +16,20 @@ async function initEmailTransporter() {
   initializationPromise = (async () => {
     try {
       // If Gmail credentials are provided, use Gmail
-      if (process.env.EMAIL_USER && process.env.EMAIL_PASS) {
+      const emailUser = process.env.EMAIL_USER;
+      const emailPass = process.env.EMAIL_PASS;
+
+      const isPlaceholder = (val) => !val || val.includes('your-email') || val.includes('your-16-character');
+
+      if (emailUser && emailPass && !isPlaceholder(emailUser) && !isPlaceholder(emailPass)) {
         console.log('🔄 Attempting to configure Gmail service...');
         const gmailTransporter = nodemailer.createTransport({
-          service: 'gmail',
+          host: 'smtp.gmail.com',
+          port: 465,
+          secure: true, // use SSL
           auth: {
-            user: process.env.EMAIL_USER,
-            pass: process.env.EMAIL_PASS // App password, not regular password
+            user: emailUser,
+            pass: emailPass // App password, not regular password
           }
         });
 
@@ -31,6 +38,10 @@ async function initEmailTransporter() {
         transporter = gmailTransporter;
         console.log('✅ Email service: Gmail configured and verified');
         return transporter;
+      }
+
+      if (emailUser && emailPass && (isPlaceholder(emailUser) || isPlaceholder(emailPass))) {
+        console.warn('⚠️  Gmail credentials appear to be placeholders. Falling back to Ethereal.');
       }
 
       // Otherwise, use Ethereal Email (free testing service)
