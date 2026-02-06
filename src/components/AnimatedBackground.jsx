@@ -1,81 +1,43 @@
 import React from 'react';
-import { motion } from 'framer-motion';
 
 const AnimatedBackground = () => {
     return (
-        <div className="fixed inset-0 z-[-1] overflow-hidden bg-slate-900">
+        <div className="fixed inset-0 z-[-1] overflow-hidden bg-[#0a0f1d]">
             {/* Base Gradient */}
-            <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 opacity-80" />
+            <div className="absolute inset-0 bg-gradient-to-br from-[#0a0f1d] via-[#1a1635] to-[#0a0f1d]" />
 
-            {/* Animated Blobs - Optimized for performance */}
-            <motion.div
-                animate={{
-                    scale: [1, 1.1, 1],
-                    opacity: [0.2, 0.4, 0.2],
-                    x: [0, 50, 0],
-                    y: [0, -30, 0],
-                }}
-                transition={{
-                    duration: 20,
-                    repeat: Infinity,
-                    ease: "linear"
-                }}
-                style={{ willChange: "transform, opacity" }}
-                className="absolute -top-20 -left-20 w-[600px] h-[600px] bg-purple-600 rounded-full filter blur-[120px] opacity-20 pointer-events-none"
+            <style dangerouslySetInnerHTML={{
+                __html: `
+                @keyframes blob-bounce {
+                    0%, 100% { transform: translate(0, 0) scale(1); }
+                    33% { transform: translate(30px, -50px) scale(1.1); }
+                    66% { transform: translate(-20px, 20px) scale(0.9); }
+                }
+                .animate-blob-1 { animation: blob-bounce 25s infinite ease-in-out; }
+                .animate-blob-2 { animation: blob-bounce 30s infinite ease-in-out reverse; }
+                .animate-blob-3 { animation: blob-bounce 28s infinite ease-in-out 5s; }
+                .animate-blob-4 { animation: blob-bounce 35s infinite ease-in-out 2s reverse; }
+            `}} />
+
+            {/* Optimized Blobs using CSS Animations */}
+            <div
+                className="absolute -top-[10%] -left-[10%] w-[60vw] h-[60vw] bg-purple-600/20 rounded-full blur-[120px] pointer-events-none animate-blob-1 will-change-transform"
+            />
+            <div
+                className="absolute top-[20%] -right-[15%] w-[70vw] h-[70vw] bg-blue-600/15 rounded-full blur-[140px] pointer-events-none animate-blob-2 will-change-transform"
+            />
+            <div
+                className="absolute -bottom-[20%] left-[20%] w-[55vw] h-[55vw] bg-pink-600/15 rounded-full blur-[110px] pointer-events-none animate-blob-3 will-change-transform"
+            />
+            <div
+                className="absolute bottom-[10%] right-[10%] w-[50vw] h-[50vw] bg-indigo-600/20 rounded-full blur-[100px] pointer-events-none animate-blob-4 will-change-transform"
             />
 
-            <motion.div
-                animate={{
-                    scale: [1, 1.2, 1],
-                    opacity: [0.15, 0.35, 0.15],
-                    x: [0, -50, 0],
-                    y: [0, 60, 0],
-                }}
-                transition={{
-                    duration: 25,
-                    repeat: Infinity,
-                    ease: "linear",
-                    delay: 2
-                }}
-                style={{ willChange: "transform, opacity" }}
-                className="absolute top-1/4 -right-20 w-[700px] h-[700px] bg-blue-600 rounded-full filter blur-[120px] opacity-20 pointer-events-none"
-            />
-
-            <motion.div
-                animate={{
-                    scale: [1, 1.1, 1],
-                    opacity: [0.2, 0.4, 0.2],
-                    x: [0, 30, 0],
-                    y: [0, 30, 0],
-                }}
-                transition={{
-                    duration: 22,
-                    repeat: Infinity,
-                    ease: "linear",
-                    delay: 5
-                }}
-                style={{ willChange: "transform, opacity" }}
-                className="absolute -bottom-40 left-1/3 w-[600px] h-[600px] bg-pink-600 rounded-full filter blur-[120px] opacity-20 pointer-events-none"
-            />
-
-            <motion.div
-                animate={{
-                    scale: [1, 1.2, 1],
-                    opacity: [0.15, 0.35, 0.15],
-                    x: [0, -30, 0],
-                    y: [0, -30, 0],
-                }}
-                transition={{
-                    duration: 28,
-                    repeat: Infinity,
-                    ease: "linear",
-                    delay: 8
-                }}
-                style={{ willChange: "transform, opacity" }}
-                className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-indigo-600 rounded-full filter blur-[120px] opacity-20 pointer-events-none"
-            />
+            {/* Noise Texture for extra premium feel */}
+            <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
         </div>
     );
 };
 
 export default AnimatedBackground;
+

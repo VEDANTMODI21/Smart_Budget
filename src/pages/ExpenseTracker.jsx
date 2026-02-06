@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Trash2, Tag, Calendar, DollarSign, FileText } from 'lucide-react';
+import { Plus, Trash2, Tag, Calendar, DollarSign, FileText, LayoutGrid, Receipt, ChevronRight } from 'lucide-react';
 import { useAuth } from '@/Contexts/AuthContext';
 import { expensesAPI } from '@/lib/api';
 import Header from '@/components/Header';
 import { Helmet } from 'react-helmet';
+import Skeleton from '@/components/ui/Skeleton';
 
 export default function ExpenseTracker() {
   const { user } = useAuth();
@@ -19,19 +20,16 @@ export default function ExpenseTracker() {
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
-  // Categories matching backend enum + Extras mapped to 'Other' or 'Bills' conceptually if needed
-  // Backend Enum: ['Food', 'Transport', 'Shopping', 'Bills', 'Entertainment', 'Health', 'Other']
   const categories = [
-    { value: 'Food', label: 'Food & Dining' },
-    { value: 'Transport', label: 'Transportation' },
-    { value: 'Shopping', label: 'Shopping' },
-    { value: 'Bills', label: 'Bills & Utilities' },
-    { value: 'Entertainment', label: 'Entertainment' },
-    { value: 'Health', label: 'Health & Wellness' },
-    { value: 'Other', label: 'Other' }
+    { value: 'Food', label: 'Food & Dining', icon: '🍔' },
+    { value: 'Transport', label: 'Transportation', icon: '🚗' },
+    { value: 'Shopping', label: 'Shopping', icon: '🛍️' },
+    { value: 'Bills', label: 'Bills & Utilities', icon: '📄' },
+    { value: 'Entertainment', label: 'Entertainment', icon: '🎬' },
+    { value: 'Health', label: 'Health & Wellness', icon: '💊' },
+    { value: 'Other', label: 'Other', icon: '✨' }
   ];
 
-  // Load expenses on mount
   useEffect(() => {
     if (user) {
       loadExpenses();
@@ -47,25 +45,18 @@ export default function ExpenseTracker() {
       console.error('Error loading expenses:', error);
       setExpenses([]);
     } finally {
-      setLoading(false);
+      setTimeout(() => setLoading(false), 500);
     }
   };
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setFormData(prevState => ({
-      ...prevState,
-      [name]: value
-    }));
+    setFormData(prevState => ({ ...prevState, [name]: value }));
   };
 
   const handleAddExpense = async (e) => {
     e.preventDefault();
-
-    if (!formData.title.trim() || !formData.amount.trim()) {
-      alert('Please fill in title and amount');
-      return;
-    }
+    if (!formData.title.trim() || !formData.amount.trim()) return;
 
     try {
       setSubmitting(true);
@@ -76,11 +67,7 @@ export default function ExpenseTracker() {
         category: formData.category,
         date: formData.date
       });
-
-      // Add to state
       setExpenses([newExpense, ...expenses]);
-
-      // Clear form
       setFormData({
         title: '',
         description: '',
@@ -88,228 +75,196 @@ export default function ExpenseTracker() {
         category: 'Food',
         date: new Date().toISOString().split('T')[0]
       });
-
     } catch (error) {
       console.error('Error adding expense:', error);
-      alert('Failed to add expense: ' + error.message);
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleDeleteExpense = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this expense?')) return;
-
     try {
       await expensesAPI.delete(id);
       setExpenses(expenses.filter(expense => expense._id !== id));
     } catch (error) {
       console.error('Error deleting expense:', error);
-      alert('Failed to delete expense');
     }
   };
 
   const totalExpense = expenses.reduce((sum, expense) => sum + parseFloat(expense.amount || 0), 0);
 
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
+  };
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: { y: 0, opacity: 1 }
+  };
+
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      transition={{ duration: 0.5 }}
-      className="min-h-screen relative"
-    >
+    <div className="min-h-screen">
       <Helmet>
-        <title>Expenses - Smart Budget</title>
+        <title>Tracker | Smart Budget</title>
       </Helmet>
 
       <Header />
 
-      <div className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8">
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
-          <h1 className="text-4xl font-bold text-white mb-2">Expense Tracker</h1>
-          <p className="text-white/80">Manage your daily spending</p>
-        </motion.div>
+      <motion.main
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8 space-y-12"
+      >
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <motion.div variants={itemVariants}>
+            <h1 className="text-5xl font-black text-white tracking-tighter">
+              Expense <span className="text-emerald-400">Tracker</span>
+            </h1>
+            <p className="text-white/40 font-medium mt-2">Personal spending log and statistics.</p>
+          </motion.div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <motion.div variants={itemVariants} className="bg-emerald-500/10 border border-emerald-500/20 backdrop-blur-xl rounded-[2rem] px-8 py-6 flex items-center gap-6">
+            <div>
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400/60 mb-1">Cumulative Spend</p>
+              <p className="text-3xl font-black text-white">${totalExpense.toFixed(2)}</p>
+            </div>
+            <div className="w-px h-10 bg-white/10" />
+            <div className="text-right">
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/20 mb-1">Records</p>
+              <p className="text-xl font-black text-white">{expenses.length}</p>
+            </div>
+          </motion.div>
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
           {/* Form Section */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.1 }}
-            className="lg:col-span-1"
-          >
-            <div className="bg-white/10 backdrop-blur-xl rounded-2xl shadow-2xl p-6 border border-white/20 sticky top-4">
-              <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
-                <Plus className="w-5 h-5" /> Add New Expense
+          <motion.div variants={itemVariants} className="lg:col-span-4">
+            <div className="bg-white/5 backdrop-blur-2xl rounded-[2.5rem] p-10 border border-white/10 sticky top-24">
+              <h2 className="text-2xl font-black text-white mb-8 flex items-center gap-3">
+                <Plus className="w-6 h-6 text-emerald-400" /> New Entry
               </h2>
 
-              <form onSubmit={handleAddExpense} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-white/90 mb-1">Title</label>
-                  <div className="relative">
-                    <FileText className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50" />
+              <form onSubmit={handleAddExpense} className="space-y-6">
+                <div className="space-y-2">
+                  <Label className="text-white/40 text-xs font-bold uppercase tracking-widest ml-1">Title</Label>
+                  <div className="relative group">
+                    <FileText className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-emerald-400 transition-colors" />
                     <input
-                      type="text"
                       name="title"
                       value={formData.title}
                       onChange={handleInputChange}
-                      placeholder="e.g. Grocery Shopping"
-                      className="w-full pl-10 pr-4 py-2 bg-white/10 border border-white/20 rounded-lg focus:ring-2 focus:ring-white/50 focus:border-transparent outline-none text-white placeholder-white/50 backdrop-blur-xl transition-all"
+                      placeholder="Coffee, Rent, etc."
+                      className="w-full pl-12 pr-4 py-4 bg-white/5 border border-white/10 rounded-2xl text-white outline-none focus:border-emerald-500/50 transition-all font-medium"
                     />
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-white/90 mb-1">Amount</label>
-                  <div className="relative">
-                    <DollarSign className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50" />
-                    <input
-                      type="number"
-                      name="amount"
-                      value={formData.amount}
-                      onChange={handleInputChange}
-                      placeholder="0.00"
-                      step="0.01"
-                      className="w-full pl-10 pr-4 py-2 bg-white/10 border border-white/20 rounded-lg focus:ring-2 focus:ring-white/50 focus:border-transparent outline-none text-white placeholder-white/50 backdrop-blur-xl transition-all"
-                    />
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="text-white/40 text-xs font-bold uppercase tracking-widest ml-1">Amount</Label>
+                    <div className="relative group">
+                      <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-emerald-400 transition-colors" />
+                      <input
+                        type="number"
+                        name="amount"
+                        value={formData.amount}
+                        onChange={handleInputChange}
+                        placeholder="0.00"
+                        className="w-full pl-12 pr-4 py-4 bg-white/5 border border-white/10 rounded-2xl text-white outline-none focus:border-emerald-500/50 transition-all font-bold"
+                      />
+                    </div>
                   </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-white/90 mb-1">Category</label>
-                  <div className="relative">
-                    <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50" />
+                  <div className="space-y-2">
+                    <Label className="text-white/40 text-xs font-bold uppercase tracking-widest ml-1">Category</Label>
                     <select
                       name="category"
                       value={formData.category}
                       onChange={handleInputChange}
-                      className="w-full pl-10 pr-4 py-2 bg-white/10 border border-white/20 rounded-lg focus:ring-2 focus:ring-white/50 focus:border-transparent outline-none text-white backdrop-blur-xl transition-all [&>option]:text-gray-900"
+                      className="w-full px-4 py-4 bg-white/5 border border-white/10 rounded-2xl text-white outline-none focus:border-emerald-500/50 transition-all font-bold [&>option]:text-gray-900"
                     >
-                      {categories.map(cat => (
-                        <option key={cat.value} value={cat.value}>{cat.label}</option>
-                      ))}
+                      {categories.map(cat => <option key={cat.value} value={cat.value}>{cat.label}</option>)}
                     </select>
                   </div>
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-white/90 mb-1">Date</label>
-                  <div className="relative">
-                    <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/50" />
-                    <input
-                      type="date"
-                      name="date"
-                      value={formData.date}
-                      onChange={handleInputChange}
-                      className="w-full pl-10 pr-4 py-2 bg-white/10 border border-white/20 rounded-lg focus:ring-2 focus:ring-white/50 focus:border-transparent outline-none text-white backdrop-blur-xl transition-all"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-white/90 mb-1">Description (Optional)</label>
-                  <textarea
-                    name="description"
-                    value={formData.description}
+                <div className="space-y-2">
+                  <Label className="text-white/40 text-xs font-bold uppercase tracking-widest ml-1">Date</Label>
+                  <input
+                    type="date"
+                    name="date"
+                    value={formData.date}
                     onChange={handleInputChange}
-                    placeholder="Add details..."
-                    rows="3"
-                    className="w-full px-4 py-2 bg-white/10 border border-white/20 rounded-lg focus:ring-2 focus:ring-white/50 focus:border-transparent outline-none text-white placeholder-white/50 backdrop-blur-xl transition-all resize-none"
+                    className="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-2xl text-white outline-none focus:border-emerald-500/50 transition-all font-medium"
                   />
                 </div>
 
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-xl transition duration-200 border border-green-400/50 shadow-lg hover:shadow-green-500/30 flex items-center justify-center gap-2"
+                  className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black py-5 rounded-[1.5rem] transition-all shadow-xl shadow-emerald-500/20 active:scale-95 flex items-center justify-center gap-2"
                 >
-                  {submitting ? 'Adding...' : <><Plus className="w-5 h-5" /> Add Expense</>}
+                  {submitting ? <RefreshCw className="w-6 h-6 animate-spin" /> : 'Add to Ledger'}
                 </button>
               </form>
             </div>
           </motion.div>
 
           {/* List Section */}
-          <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2 }}
-            className="lg:col-span-2 space-y-6"
-          >
-            {/* Summary Card */}
-            <div className="bg-gradient-to-r from-emerald-500/20 to-teal-500/20 backdrop-blur-xl rounded-2xl shadow-xl p-6 border border-white/20 flex justify-between items-center">
-              <div>
-                <h2 className="text-lg font-medium text-white/80">Total Spending</h2>
-                <div className="text-4xl font-bold text-white mt-1">
-                  ${totalExpense.toFixed(2)}
-                </div>
-              </div>
-              <div className="text-right">
-                <div className="text-sm text-white/60">{expenses.length} Records</div>
-              </div>
-            </div>
-
-            {/* Expenses List */}
-            <div className="bg-white/10 backdrop-blur-xl rounded-2xl shadow-xl border border-white/20 overflow-hidden">
-              <div className="p-6 border-b border-white/10">
-                <h2 className="text-xl font-bold text-white">Recent Expenses</h2>
+          <motion.div variants={itemVariants} className="lg:col-span-8 space-y-6">
+            <div className="bg-white/5 backdrop-blur-xl rounded-[2.5rem] border border-white/10 overflow-hidden">
+              <div className="p-10 border-b border-white/5 flex items-center justify-between">
+                <h2 className="text-2xl font-black text-white">History</h2>
+                <LayoutGrid className="w-6 h-6 text-white/20" />
               </div>
 
               {loading ? (
-                <div className="p-12 text-center text-white/70">
-                  <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-white mx-auto mb-4"></div>
-                  Loading expenses...
+                <div className="p-10 space-y-4">
+                  {Array(4).fill(0).map((_, i) => <Skeleton key={i} className="h-24 w-full rounded-3xl" />)}
                 </div>
               ) : expenses.length === 0 ? (
-                <div className="p-12 text-center text-white/70">
-                  <p>No expenses added yet.</p>
-                  <p className="text-sm mt-2 opacity-60">Add a new expense to get started!</p>
+                <div className="p-20 text-center">
+                  <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <Receipt className="w-10 h-10 text-white/10" />
+                  </div>
+                  <p className="text-white font-bold opacity-40">Your ledger is empty.</p>
                 </div>
               ) : (
-                <div className="divide-y divide-white/10">
-                  <AnimatePresence>
+                <div className="divide-y divide-white/5 px-4">
+                  <AnimatePresence mode="popLayout">
                     {expenses.map((expense) => (
                       <motion.div
                         key={expense._id}
-                        initial={{ opacity: 0, height: 0 }}
-                        animate={{ opacity: 1, height: 'auto' }}
-                        exit={{ opacity: 0, height: 0 }}
-                        className="p-4 hover:bg-white/5 transition-colors flex items-center justify-between group"
+                        layout
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 20 }}
+                        className="p-6 flex items-center justify-between gap-6 group hover:bg-white/[0.02] rounded-3xl transition-all my-2"
                       >
-                        <div className="flex items-center gap-4 overflow-hidden">
-                          <div className={`
-                            w-10 h-10 rounded-full flex items-center justify-center text-white shrink-0
-                            ${expense.category === 'Food' ? 'bg-orange-500' :
-                              expense.category === 'Transport' ? 'bg-blue-500' :
-                                expense.category === 'Shopping' ? 'bg-pink-500' :
-                                  expense.category === 'Bills' ? 'bg-red-500' :
-                                    'bg-indigo-500'}
-                          `}>
-                            {expense.category[0]}
+                        <div className="flex items-center gap-6 overflow-hidden">
+                          <div className="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center text-2xl group-hover:bg-emerald-500/20 transition-colors shadow-inner">
+                            {categories.find(c => c.value === expense.category)?.icon || '💰'}
                           </div>
                           <div className="min-w-0">
-                            <h3 className="font-semibold text-white truncate">{expense.title}</h3>
-                            <div className="text-sm text-white/60 flex items-center gap-2">
+                            <h3 className="text-lg font-black text-white truncate group-hover:text-emerald-400 transition-colors uppercase tracking-tighter">
+                              {expense.title}
+                            </h3>
+                            <div className="text-[10px] text-white/30 font-bold uppercase tracking-[0.1em] flex items-center gap-2 mt-1">
                               <span>{expense.category}</span>
-                              <span>•</span>
+                              <span className="w-1 h-1 rounded-full bg-white/10" />
                               <span>{new Date(expense.date).toLocaleDateString()}</span>
                             </div>
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-4 pl-4 shrink-0">
-                          <span className="text-lg font-bold text-white whitespace-nowrap">
-                            ${parseFloat(expense.amount).toFixed(2)}
-                          </span>
+                        <div className="flex items-center gap-6">
+                          <div className="text-right">
+                            <p className="text-2xl font-black text-white">${parseFloat(expense.amount).toFixed(2)}</p>
+                          </div>
                           <button
                             onClick={() => handleDeleteExpense(expense._id)}
-                            className="p-2 text-white/40 hover:text-red-400 hover:bg-white/10 rounded-lg transition-all opacity-0 group-hover:opacity-100 focus:opacity-100"
-                            title="Delete Expense"
+                            className="p-3 bg-red-500/10 text-red-400 rounded-xl opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500/20"
                           >
                             <Trash2 className="w-5 h-5" />
                           </button>
@@ -322,7 +277,7 @@ export default function ExpenseTracker() {
             </div>
           </motion.div>
         </div>
-      </div>
-    </motion.div>
+      </motion.main>
+    </div>
   );
 }
