@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Helmet } from 'react-helmet';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Edit, Trash2, Filter, AlertTriangle, X } from 'lucide-react';
+import { Plus, Edit, Trash2, Filter, AlertTriangle, X, Search, Tag, Calendar, Receipt, ChevronRight } from 'lucide-react';
 import { useAuth } from '@/Contexts/AuthContext';
 import { supabase } from '@/lib/customSupabaseClient';
 import Header from '@/components/Header';
@@ -21,10 +21,12 @@ const ExpenseList = () => {
     isOpen: false,
     expenseId: null
   });
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [filters, setFilters] = useState({
     category: '',
     startDate: '',
     endDate: '',
+    search: '',
   });
 
   useEffect(() => {
@@ -74,6 +76,25 @@ const ExpenseList = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1
+      }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: { duration: 0.5, ease: "easeOut" }
     }
   };
 

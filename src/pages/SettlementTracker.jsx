@@ -99,7 +99,7 @@ const SettlementTracker = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700">
+      <div className="min-h-screen bg-transparent">
         <Header />
         <div className="flex items-center justify-center min-h-[80vh]">
           <div className="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-white"></div>
@@ -111,11 +111,11 @@ const SettlementTracker = () => {
   return (
     <>
       <Helmet>
-        <title>Settlements - SplitWise</title>
+        <title>Settlements | Smart Budget</title>
         <meta name="description" content="Track and manage expense settlements" />
       </Helmet>
 
-      <div className="min-h-screen bg-gradient-to-br from-purple-600 via-blue-600 to-indigo-700">
+      <div className="min-h-screen bg-transparent">
         <Header />
 
         <div className="max-w-7xl mx-auto px-4 py-16 sm:px-6 lg:px-8">

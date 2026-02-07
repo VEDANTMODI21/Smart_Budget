@@ -34,7 +34,7 @@ const Header = () => {
             <div className="p-2 bg-white/20 rounded-lg">
               <DollarSign className="w-6 h-6 text-white" />
             </div>
-            <span className="text-xl font-bold text-white">SplitWise</span>
+            <span className="text-xl font-bold text-white">Smart Budget</span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -44,8 +44,8 @@ const Header = () => {
                 key={item.path}
                 to={item.path}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${isActive(item.path)
-                    ? 'bg-white/20 text-white'
-                    : 'text-white/80 hover:bg-white/10 hover:text-white'
+                  ? 'bg-white/20 text-white'
+                  : 'text-white/80 hover:bg-white/10 hover:text-white'
                   }`}
               >
                 {item.name}
@@ -89,8 +89,8 @@ const Header = () => {
                   to={item.path}
                   onClick={() => setMobileMenuOpen(false)}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${isActive(item.path)
-                      ? 'bg-white/20 text-white'
-                      : 'text-white/80 hover:bg-white/10 hover:text-white'
+                    ? 'bg-white/20 text-white'
+                    : 'text-white/80 hover:bg-white/10 hover:text-white'
                     }`}
                 >
                   {item.name}

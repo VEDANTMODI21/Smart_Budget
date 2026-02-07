@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Trash2, Tag, Calendar, DollarSign, FileText, LayoutGrid, Receipt, ChevronRight } from 'lucide-react';
+import { Plus, Trash2, Tag, Calendar, DollarSign, FileText, LayoutGrid, Receipt, ChevronRight, RefreshCw } from 'lucide-react';
 import { useAuth } from '@/Contexts/AuthContext';
 import { expensesAPI } from '@/lib/api';
 import Header from '@/components/Header';
 import { Helmet } from 'react-helmet';
 import Skeleton from '@/components/ui/Skeleton';
+import { Label } from '@/components/ui/label';
 
 export default function ExpenseTracker() {
   const { user } = useAuth();

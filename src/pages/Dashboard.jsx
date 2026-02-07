@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { Helmet } from 'react-helmet';
 import { motion, AnimatePresence } from 'framer-motion';
-import { DollarSign, Users, AlertCircle, TrendingUp, RefreshCw, Bell, Calendar, Receipt, ArrowUpRight, ArrowDownRight, MoreHorizontal } from 'lucide-react';
+import { DollarSign, Users, AlertCircle, TrendingUp, RefreshCw, Bell, Calendar, Receipt, ArrowUpRight, ArrowDownRight, MoreHorizontal, Plus } from 'lucide-react';
 import { useAuth } from '@/Contexts/AuthContext';
 import { expensesAPI, settlementsAPI, remindersAPI } from '@/lib/api';
 import Header from '@/components/Header';
@@ -136,7 +136,7 @@ const Dashboard = () => {
       color: 'bg-blue-500',
       gradient: 'from-blue-500/20 to-cyan-500/20',
       subtitle: `${stats.expenseCount} entries`,
-      trend: { value: '12%', up: true }
+      trend: { value: 'Steady', up: true }
     },
     {
       title: 'Active Partners',
@@ -145,7 +145,7 @@ const Dashboard = () => {
       color: 'bg-purple-500',
       gradient: 'from-purple-500/20 to-pink-500/20',
       subtitle: 'Sharing costs',
-      trend: { value: '3', up: true }
+      trend: { value: stats.totalPeople > 0 ? 'Active' : 'Empty', up: stats.totalPeople > 0 }
     },
     {
       title: 'Pending Issues',
@@ -154,7 +154,7 @@ const Dashboard = () => {
       color: 'bg-orange-500',
       gradient: 'from-orange-500/20 to-red-500/20',
       subtitle: 'Awaiting settlement',
-      trend: { value: '2', up: false }
+      trend: { value: stats.unsettledDebts > 0 ? 'Urgent' : 'Clear', up: stats.unsettledDebts === 0 }
     },
     {
       title: 'Outstanding',
@@ -163,9 +163,16 @@ const Dashboard = () => {
       color: 'bg-emerald-500',
       gradient: 'from-green-500/20 to-emerald-500/20',
       subtitle: 'Accounts receivable',
-      trend: { value: '8%', up: true }
+      trend: { value: 'Live', up: true }
     },
   ];
+
+  const getRelativeTime = (date) => {
+    const diff = Math.floor((new Date() - date) / 1000);
+    if (diff < 60) return 'Just now';
+    if (diff < 3600) return `${Math.floor(diff / 60)}m ago`;
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
 
   return (
     <div className="min-h-screen">
@@ -194,7 +201,7 @@ const Dashboard = () => {
           <motion.div variants={itemVariants} className="flex items-center gap-3">
             <div className="text-right hidden sm:block">
               <p className="text-xs text-white/40 uppercase font-bold tracking-widest">Last updated</p>
-              <p className="text-sm text-white/70">{lastUpdated.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+              <p className="text-sm text-white/70">{getRelativeTime(lastUpdated)}</p>
             </div>
             <motion.button
               whileHover={{ scale: 1.05 }}
@@ -271,7 +278,14 @@ const Dashboard = () => {
                   <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-4">
                     <Receipt className="w-8 h-8 text-white/20" />
                   </div>
-                  <p className="text-white/40 font-medium">No expenses logged yet.</p>
+                  <p className="text-white/40 font-medium mb-6">No expenses logged yet.</p>
+                  <button
+                    onClick={() => window.location.href = '/expenses-tracker'}
+                    className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-2xl font-black shadow-lg shadow-blue-500/20 transition-all active:scale-95"
+                  >
+                    <Plus className="w-5 h-5" />
+                    Add Your First Expense
+                  </button>
                 </div>
               ) : (
                 <div className="space-y-4">
