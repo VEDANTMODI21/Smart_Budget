@@ -211,9 +211,9 @@ router.post('/otp/generate', async (req, res) => {
 
     res.json({
       message,
-      // Stop returning the OTP in the response for security and to meet user requirements
-      otp: undefined,
-      previewUrl: emailResult.previewUrl, // Include preview URL only if using Ethereal
+      // Return the OTP in the response for development mode so the user can see it
+      otp: process.env.NODE_ENV !== 'production' ? otp : undefined,
+      previewUrl: emailResult.previewUrl,
       expiresIn: 600 // seconds
     });
   } catch (error) {

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
-import { api } from '@/services/api';
+import { supabase } from '@/lib/customSupabaseClient';
 import { useToast } from '@/components/ui/use-toast';
 
 const AuthContext = createContext(undefined);
@@ -7,49 +7,54 @@ const AuthContext = createContext(undefined);
 export const AuthProvider = ({ children }) => {
   const { toast } = useToast();
   const [user, setUser] = useState(null);
+  const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Check for existing token and validate on mount
+  // Check for existing session and listen for changes
   useEffect(() => {
-    const initAuth = async () => {
-      const token = localStorage.getItem('token');
-
-      if (token) {
-        try {
-          // Validate token by fetching user data
-          const userData = await api.getCurrentUser();
-          setUser(userData);
-        } catch (error) {
-          console.error('Token validation failed:', error);
-          // Clear invalid token
-          localStorage.removeItem('token');
-          setUser(null);
-        }
+    // Get initial session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      if (session?.access_token) {
+        localStorage.setItem('token', session.access_token);
       }
-
       setLoading(false);
-    };
+    });
 
-    initAuth();
+    // Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      if (session?.access_token) {
+        localStorage.setItem('token', session.access_token);
+      } else {
+        localStorage.removeItem('token');
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  // Register with password
+  // Register with Supabase
   const signup = useCallback(async (name, email, password) => {
     try {
-      const response = await api.register(name, email, password);
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: { full_name: name }
+        }
+      });
 
-      // Store token
-      localStorage.setItem('token', response.token);
-
-      // Set user
-      setUser(response.user);
+      if (error) throw error;
 
       toast({
         title: "Success",
-        description: "Account created successfully!",
+        description: "Registration successful! Please check your email for a confirmation link.",
       });
 
-      return { data: response, error: null };
+      return { data, error: null };
     } catch (error) {
       console.error("Sign up error:", error);
       toast({
@@ -61,23 +66,22 @@ export const AuthProvider = ({ children }) => {
     }
   }, [toast]);
 
-  // Login with password
+  // Login with Supabase
   const login = useCallback(async (email, password) => {
     try {
-      const response = await api.login(email, password);
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-      // Store token
-      localStorage.setItem('token', response.token);
-
-      // Set user
-      setUser(response.user);
+      if (error) throw error;
 
       toast({
         title: "Success",
         description: "Logged in successfully!",
       });
 
-      return { data: response, error: null };
+      return { data, error: null };
     } catch (error) {
       console.error("Login error:", error);
       toast({
@@ -89,17 +93,25 @@ export const AuthProvider = ({ children }) => {
     }
   }, [toast]);
 
-  // Generate OTP
+  // Generate OTP (Magic Link or OTP)
   const generateOTP = useCallback(async (email) => {
     try {
-      const response = await api.generateOTP(email);
+      const { data, error } = await supabase.auth.signInWithOtp({
+        email,
+        options: {
+          // Send a numeric OTP instead of a magic link if configured in Supabase
+          shouldCreateUser: true,
+        },
+      });
+
+      if (error) throw error;
 
       toast({
         title: "OTP Sent",
-        description: response.message || "Check your email for the OTP",
+        description: "Check your email for the verification code",
       });
 
-      return response;
+      return { success: true, message: "OTP Sent" };
     } catch (error) {
       console.error("OTP generation error:", error);
       toast({
@@ -111,23 +123,45 @@ export const AuthProvider = ({ children }) => {
     }
   }, [toast]);
 
-  // Login/Signup with OTP
+  // Verify OTP
   const loginWithOTP = useCallback(async (email, otp, name = null) => {
     try {
-      const response = await api.verifyOTP(email, otp, name);
+      // 1. Try 'signup' verification type
+      let result = await supabase.auth.verifyOtp({
+        email,
+        token: otp,
+        type: 'signup'
+      });
 
-      // Store token
-      localStorage.setItem('token', response.token);
+      // 2. If it fails, try 'magiclink' (common for existing users)
+      if (result.error) {
+        result = await supabase.auth.verifyOtp({
+          email,
+          token: otp,
+          type: 'magiclink'
+        });
+      }
 
-      // Set user
-      setUser(response.user);
+      // 3. Last fallback for recovery/other
+      if (result.error) {
+        throw result.error;
+      }
+
+      const { data } = result;
+
+      // Update metadata if name was provided
+      if (name && data.user) {
+        await supabase.auth.updateUser({
+          data: { full_name: name }
+        });
+      }
 
       toast({
         title: "Success",
-        description: response.message || "Logged in successfully!",
+        description: "Login successful!",
       });
 
-      return { data: response, error: null };
+      return { data, error: null };
     } catch (error) {
       console.error("OTP verification error:", error);
       toast({
@@ -142,11 +176,12 @@ export const AuthProvider = ({ children }) => {
   // Logout
   const logout = useCallback(async () => {
     try {
-      // Clear token
-      localStorage.removeItem('token');
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
 
-      // Clear user
+      localStorage.removeItem('token');
       setUser(null);
+      setSession(null);
 
       toast({
         title: "Success",
@@ -166,18 +201,18 @@ export const AuthProvider = ({ children }) => {
   }, [toast]);
 
   const value = useMemo(() => ({
-    user,
+    user: user ? { ...user, name: user.user_metadata?.full_name || user.email } : null,
+    session,
     loading,
     signup,
     login,
     generateOTP,
     loginWithOTP,
     logout,
-    // Legacy aliases for compatibility
     signUp: signup,
     signIn: login,
     signOut: logout,
-  }), [user, loading, signup, login, generateOTP, loginWithOTP, logout]);
+  }), [user, session, loading, signup, login, generateOTP, loginWithOTP, logout]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

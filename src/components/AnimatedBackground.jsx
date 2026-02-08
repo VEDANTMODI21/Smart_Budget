@@ -21,16 +21,16 @@ const AnimatedBackground = () => {
 
             {/* Optimized Blobs using CSS Animations */}
             <div
-                className="absolute -top-[10%] -left-[10%] w-[60vw] h-[60vw] bg-purple-600/20 rounded-full blur-[120px] pointer-events-none animate-blob-1 will-change-transform"
+                className="absolute -top-[10%] -left-[10%] w-[45vw] h-[45vw] bg-purple-600/10 rounded-full blur-[100px] pointer-events-none animate-blob-1 will-change-transform"
             />
             <div
-                className="absolute top-[20%] -right-[15%] w-[70vw] h-[70vw] bg-blue-600/15 rounded-full blur-[140px] pointer-events-none animate-blob-2 will-change-transform"
+                className="absolute top-[20%] -right-[15%] w-[50vw] h-[50vw] bg-blue-600/10 rounded-full blur-[120px] pointer-events-none animate-blob-2 will-change-transform"
             />
             <div
-                className="absolute -bottom-[20%] left-[20%] w-[55vw] h-[55vw] bg-pink-600/15 rounded-full blur-[110px] pointer-events-none animate-blob-3 will-change-transform"
+                className="absolute -bottom-[20%] left-[20%] w-[40vw] h-[40vw] bg-pink-600/8 rounded-full blur-[90px] pointer-events-none animate-blob-3 will-change-transform"
             />
             <div
-                className="absolute bottom-[10%] right-[10%] w-[50vw] h-[50vw] bg-indigo-600/20 rounded-full blur-[100px] pointer-events-none animate-blob-4 will-change-transform"
+                className="absolute bottom-[10%] right-[10%] w-[35vw] h-[35vw] bg-indigo-600/10 rounded-full blur-[80px] pointer-events-none animate-blob-4 will-change-transform"
             />
 
             {/* Noise Texture for extra premium feel */}

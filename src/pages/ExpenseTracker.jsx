@@ -120,21 +120,21 @@ export default function ExpenseTracker() {
       >
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <motion.div variants={itemVariants}>
-            <h1 className="text-5xl font-black text-white tracking-tighter">
+            <h1 className="text-3xl font-bold text-white tracking-tight">
               Expense <span className="text-emerald-400">Tracker</span>
             </h1>
-            <p className="text-white/40 font-medium mt-2">Personal spending log and statistics.</p>
+            <p className="text-white/40 text-sm font-medium mt-1">Personal spending log and statistics.</p>
           </motion.div>
 
-          <motion.div variants={itemVariants} className="bg-emerald-500/10 border border-emerald-500/20 backdrop-blur-xl rounded-[2rem] px-8 py-6 flex items-center gap-6">
+          <motion.div variants={itemVariants} className="bg-emerald-500/10 border border-emerald-500/20 backdrop-blur-xl rounded-[1.5rem] px-6 py-4 flex items-center gap-6">
             <div>
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400/60 mb-1">Cumulative Spend</p>
-              <p className="text-3xl font-black text-white">${totalExpense.toFixed(2)}</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-400/60 mb-0.5">Cumulative Spend</p>
+              <p className="text-2xl font-bold text-white tracking-tight">${totalExpense.toFixed(2)}</p>
             </div>
-            <div className="w-px h-10 bg-white/10" />
+            <div className="w-px h-8 bg-white/10" />
             <div className="text-right">
-              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/20 mb-1">Records</p>
-              <p className="text-xl font-black text-white">{expenses.length}</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/20 mb-0.5">Records</p>
+              <p className="text-xl font-bold text-white tracking-tight">{expenses.length}</p>
             </div>
           </motion.div>
         </div>

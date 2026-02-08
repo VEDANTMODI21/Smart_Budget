@@ -192,10 +192,10 @@ const Dashboard = () => {
         {/* Welcome Section */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <motion.div variants={itemVariants}>
-            <h1 className="text-4xl font-black text-white tracking-tight">
+            <h1 className="text-3xl font-bold text-white tracking-tight">
               Welcome back, <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">{user?.name?.split(' ')[0]}!</span>
             </h1>
-            <p className="text-white/60 mt-1">Here's what's happening with your budget today.</p>
+            <p className="text-white/40 text-sm mt-1">Here's what's happening with your budget today.</p>
           </motion.div>
 
           <motion.div variants={itemVariants} className="flex items-center gap-3">
@@ -242,9 +242,9 @@ const Dashboard = () => {
                       </div>
                     )}
                   </div>
-                  <h3 className="text-white/50 text-xs font-bold uppercase tracking-wider mb-1">{card.title}</h3>
-                  <p className="text-3xl font-black text-white mb-1">{card.value}</p>
-                  <p className="text-xs text-white/30 font-medium">{card.subtitle}</p>
+                  <h3 className="text-white/40 text-[10px] font-bold uppercase tracking-[0.1em] mb-1">{card.title}</h3>
+                  <p className="text-2xl font-bold text-white mb-0.5 tracking-tight">{card.value}</p>
+                  <p className="text-[10px] text-white/20 font-medium">{card.subtitle}</p>
                 </div>
                 {/* Decorative background element */}
                 <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-white/5 rounded-full blur-2xl group-hover:bg-white/10 transition-colors" />
