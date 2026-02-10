@@ -3,25 +3,21 @@
 const getApiUrl = () => {
   if (import.meta.env.VITE_API_URL) {
     // If VITE_API_URL is set, use it (should include /api)
-    return import.meta.env.VITE_API_URL.endsWith('/api') 
-      ? import.meta.env.VITE_API_URL 
+    return import.meta.env.VITE_API_URL.endsWith('/api')
+      ? import.meta.env.VITE_API_URL
       : `${import.meta.env.VITE_API_URL}/api`;
   }
-  
-  // If running on network, use current hostname
-  const hostname = window.location.hostname;
-  const protocol = window.location.protocol;
-  
+
   // Check if we're on localhost - use Vite proxy (relative URL)
-  // This works when running through Vite dev server (npm run dev)
+  const hostname = window.location.hostname;
   if (hostname === 'localhost' || hostname === '127.0.0.1') {
-    // Use relative URL to leverage Vite proxy
-    // Vite proxy forwards /api/* to http://localhost:5000/api/*
     return '/api';
   }
-  
-  // For network access, use absolute URL
-  return `${protocol}//${hostname}:5000/api`;
+
+  // For production/network access, default to relative /api
+  // This is much safer than assuming port 5000 on a production host
+  // If the backend is on a different domain, VITE_API_URL should be set in the deployment dash
+  return '/api';
 };
 
 const API_URL = getApiUrl();
@@ -52,7 +48,7 @@ const apiRequest = async (endpoint, options = {}) => {
 
   try {
     const fullUrl = `${API_URL}${endpoint}`;
-    
+
     // Debug logging in development
     if (import.meta.env.DEV) {
       console.log(`🌐 API Request: ${options.method || 'GET'} ${fullUrl}`);
@@ -62,9 +58,9 @@ const apiRequest = async (endpoint, options = {}) => {
         console.warn('⚠️  No token in request');
       }
     }
-    
+
     const response = await fetch(fullUrl, config);
-    
+
     // Handle non-JSON responses
     let data;
     const contentType = response.headers.get('content-type');
@@ -87,12 +83,12 @@ const apiRequest = async (endpoint, options = {}) => {
     return data;
   } catch (error) {
     console.error('API Error:', error);
-    
+
     // Handle network errors
     if (error instanceof TypeError && error.message.includes('fetch')) {
       throw new Error('Unable to connect to server. Make sure the backend is running and accessible.');
     }
-    
+
     throw error;
   }
 };
@@ -129,7 +125,7 @@ export const authAPI = {
 // Expenses API
 export const expensesAPI = {
   getAll: () => apiRequest('/expenses'),
-  
+
   create: (expense) =>
     apiRequest('/expenses', {
       method: 'POST',
@@ -153,7 +149,7 @@ export const expensesAPI = {
 // Settlements API
 export const settlementsAPI = {
   getAll: () => apiRequest('/settlements'),
-  
+
   create: (settlement) =>
     apiRequest('/settlements', {
       method: 'POST',
@@ -175,7 +171,7 @@ export const settlementsAPI = {
 // Reminders API
 export const remindersAPI = {
   getAll: () => apiRequest('/reminders'),
-  
+
   create: (reminder) =>
     apiRequest('/reminders', {
       method: 'POST',
