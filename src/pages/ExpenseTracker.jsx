@@ -86,7 +86,7 @@ export default function ExpenseTracker() {
   const handleDeleteExpense = async (id) => {
     try {
       await expensesAPI.delete(id);
-      setExpenses(expenses.filter(expense => expense._id !== id));
+      setExpenses(expenses.filter(expense => expense.id !== id));
     } catch (error) {
       console.error('Error deleting expense:', error);
     }
@@ -236,7 +236,7 @@ export default function ExpenseTracker() {
                   <AnimatePresence mode="popLayout">
                     {expenses.map((expense) => (
                       <motion.div
-                        key={expense._id}
+                        key={expense.id}
                         layout
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
@@ -249,7 +249,7 @@ export default function ExpenseTracker() {
                           </div>
                           <div className="min-w-0">
                             <h3 className="text-lg font-black text-white truncate group-hover:text-emerald-400 transition-colors uppercase tracking-tighter">
-                              {expense.title}
+                              {expense.title || expense.description}
                             </h3>
                             <div className="text-[10px] text-white/30 font-bold uppercase tracking-[0.1em] flex items-center gap-2 mt-1">
                               <span>{expense.category}</span>
@@ -264,7 +264,7 @@ export default function ExpenseTracker() {
                             <p className="text-2xl font-black text-white">${parseFloat(expense.amount).toFixed(2)}</p>
                           </div>
                           <button
-                            onClick={() => handleDeleteExpense(expense._id)}
+                            onClick={() => handleDeleteExpense(expense.id)}
                             className="p-3 bg-red-500/10 text-red-400 rounded-xl opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500/20"
                           >
                             <Trash2 className="w-5 h-5" />

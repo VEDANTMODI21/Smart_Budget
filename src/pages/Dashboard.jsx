@@ -291,7 +291,7 @@ const Dashboard = () => {
                 <div className="space-y-4">
                   {stats.recentExpenses.map((expense, index) => (
                     <motion.div
-                      key={expense._id}
+                      key={expense.id}
                       initial={{ opacity: 0, x: -10 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: index * 0.05 }}
@@ -347,7 +347,7 @@ const Dashboard = () => {
                 <div className="space-y-4">
                   {stats.activeReminders.slice(0, 3).map((reminder, index) => (
                     <motion.div
-                      key={reminder._id}
+                      key={reminder.id}
                       initial={{ opacity: 0, scale: 0.95 }}
                       animate={{ opacity: 1, scale: 1 }}
                       transition={{ delay: index * 0.05 }}

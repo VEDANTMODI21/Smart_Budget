@@ -11,11 +11,11 @@ const GlobalReminderHandler = () => {
 
         const markNotified = async (id) => {
             try {
-                const reminder = remindersRef.current.find(r => r._id === id);
+                const reminder = remindersRef.current.find(r => r.id === id);
                 if (reminder) {
                     await remindersAPI.update(id, { ...reminder, notified: true });
                     // Update local ref to avoid double notify in same interval loop if needed
-                    remindersRef.current = remindersRef.current.map(r => r._id === id ? { ...r, notified: true } : r);
+                    remindersRef.current = remindersRef.current.map(r => r.id === id ? { ...r, notified: true } : r);
                 }
             } catch (err) {
                 console.error('Error marking reminder as notified:', err);
