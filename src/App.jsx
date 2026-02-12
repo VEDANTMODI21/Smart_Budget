@@ -18,6 +18,7 @@ import ExportFeature from '@/pages/ExportFeature';
 import SharedExpenseView from '@/pages/SharedExpenseView';
 import GlobalReminderHandler from '@/components/GlobalReminderHandler';
 import AnimatedBackground from '@/components/AnimatedBackground';
+import CursorGlow from '@/components/CursorGlow';
 
 // Loading Component
 const PageLoader = () => (
@@ -105,8 +106,9 @@ function App() {
     <AuthProvider>
       <OtpProvider>
         <Router>
-          <div className="relative min-h-screen">
+          <div className="relative min-h-screen overflow-hidden selection:bg-blue-500/30">
             <AnimatedBackground />
+            <CursorGlow />
             <GlobalReminderHandler />
             <Suspense fallback={<PageLoader />}>
               <AppRoutes />

@@ -1,40 +1,68 @@
 import React from 'react';
+import { motion } from 'framer-motion';
 
 const AnimatedBackground = () => {
     return (
-        <div className="fixed inset-0 z-[-1] overflow-hidden bg-[#0a0f1d]">
-            {/* Base Gradient */}
-            <div className="absolute inset-0 bg-gradient-to-br from-[#0a0f1d] via-[#1a1635] to-[#0a0f1d]" />
+        <div className="fixed inset-0 z-[-1] overflow-hidden bg-[#030711]">
+            {/* Base Background Overlay */}
+            <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(17,24,39,1)_0%,rgba(3,7,18,1)_100%)]" />
 
-            <style dangerouslySetInnerHTML={{
-                __html: `
-                @keyframes blob-bounce {
-                    0%, 100% { transform: translate(0, 0) scale(1); }
-                    33% { transform: translate(30px, -50px) scale(1.1); }
-                    66% { transform: translate(-20px, 20px) scale(0.9); }
-                }
-                .animate-blob-1 { animation: blob-bounce 25s infinite ease-in-out; }
-                .animate-blob-2 { animation: blob-bounce 30s infinite ease-in-out reverse; }
-                .animate-blob-3 { animation: blob-bounce 28s infinite ease-in-out 5s; }
-                .animate-blob-4 { animation: blob-bounce 35s infinite ease-in-out 2s reverse; }
-            `}} />
+            {/* Dynamic Blobs */}
+            <motion.div
+                animate={{
+                    scale: [1, 1.2, 1],
+                    x: [0, 100, 0],
+                    y: [0, 50, 0],
+                }}
+                transition={{
+                    duration: 20,
+                    repeat: Infinity,
+                    ease: "linear"
+                }}
+                className="absolute -top-[10%] -left-[10%] w-[60vw] h-[60vw] bg-blue-600/10 rounded-full blur-[120px] pointer-events-none"
+            />
+            <motion.div
+                animate={{
+                    scale: [1, 1.1, 1],
+                    x: [0, -80, 0],
+                    y: [0, 100, 0],
+                }}
+                transition={{
+                    duration: 25,
+                    repeat: Infinity,
+                    ease: "linear"
+                }}
+                className="absolute top-[20%] -right-[15%] w-[55vw] h-[55vw] bg-purple-600/10 rounded-full blur-[140px] pointer-events-none"
+            />
+            <motion.div
+                animate={{
+                    scale: [1, 1.3, 1],
+                    x: [0, 50, 0],
+                    y: [0, -100, 0],
+                }}
+                transition={{
+                    duration: 22,
+                    repeat: Infinity,
+                    ease: "linear"
+                }}
+                className="absolute -bottom-[20%] left-[20%] w-[50vw] h-[50vw] bg-indigo-600/10 rounded-full blur-[100px] pointer-events-none"
+            />
 
-            {/* Optimized Blobs using CSS Animations */}
+            {/* Grid Pattern */}
             <div
-                className="absolute -top-[10%] -left-[10%] w-[45vw] h-[45vw] bg-purple-600/10 rounded-full blur-[100px] pointer-events-none animate-blob-1 will-change-transform"
-            />
-            <div
-                className="absolute top-[20%] -right-[15%] w-[50vw] h-[50vw] bg-blue-600/10 rounded-full blur-[120px] pointer-events-none animate-blob-2 will-change-transform"
-            />
-            <div
-                className="absolute -bottom-[20%] left-[20%] w-[40vw] h-[40vw] bg-pink-600/8 rounded-full blur-[90px] pointer-events-none animate-blob-3 will-change-transform"
-            />
-            <div
-                className="absolute bottom-[10%] right-[10%] w-[35vw] h-[35vw] bg-indigo-600/10 rounded-full blur-[80px] pointer-events-none animate-blob-4 will-change-transform"
+                className="absolute inset-0 opacity-[0.15] pointer-events-none"
+                style={{
+                    backgroundImage: `linear-gradient(#ffffff 1px, transparent 1px), linear-gradient(90deg, #ffffff 1px, transparent 1px)`,
+                    backgroundSize: '60px 60px',
+                    maskImage: 'radial-gradient(ellipse at center, black, transparent 80%)'
+                }}
             />
 
-            {/* Noise Texture for extra premium feel */}
-            <div className="absolute inset-0 opacity-[0.03] pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
+            {/* Grain Texture */}
+            <div className="absolute inset-0 opacity-[0.02] pointer-events-none bg-[url('https://grainy-gradients.vercel.app/noise.svg')]" />
+
+            {/* Vignette */}
+            <div className="absolute inset-0 pointer-events-none bg-[radial-gradient(circle_at_50%_50%,transparent_0%,rgba(3,7,18,0.5)_100%)]" />
         </div>
     );
 };

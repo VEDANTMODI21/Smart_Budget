@@ -78,44 +78,38 @@ const OtpSignupPage = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-6 relative overflow-hidden bg-[#0a0f1d]">
+    <div className="min-h-screen flex items-center justify-center p-6 relative">
       <Helmet>
         <title>Create Account | Smart Budget</title>
         <meta name="description" content="Create an account using OTP verification" />
       </Helmet>
 
-      {/* Decorative Elements */}
-      <div className="absolute top-0 left-0 w-full h-full pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-emerald-600/10 rounded-full blur-[120px] animate-pulse" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] bg-blue-600/10 rounded-full blur-[120px] animate-pulse" />
-      </div>
-
       <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: "easeOut" }}
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
         className="w-full max-w-md z-10"
       >
-        <div className="bg-white/[0.02] backdrop-blur-3xl rounded-[2rem] shadow-2xl p-8 md:p-12 border border-white/10 relative overflow-hidden">
+        <div className="glass-card rounded-[2.5rem] p-10 md:p-12 relative overflow-hidden premium-glow glow-purple">
           {/* Subtle top light effect */}
-          <div className="absolute top-0 left-0 right-0 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
+          <div className="absolute top-0 left-0 right-0 h-[2px] bg-gradient-to-r from-transparent via-purple-500/50 to-transparent" />
 
           <div className="text-center mb-10">
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
             >
-              <div className="w-16 h-16 bg-emerald-500/10 rounded-2xl flex items-center justify-center mx-auto mb-6 border border-emerald-500/20 shadow-lg shadow-emerald-500/5">
-                <UserPlus className="w-8 h-8 text-emerald-400" />
+              <div className="w-20 h-20 glass-morphism rounded-3xl flex items-center justify-center mx-auto mb-8 shadow-2xl animate-float">
+                <UserPlus className="w-10 h-10 text-purple-400" />
               </div>
-              <h1 className="text-3xl font-bold text-white tracking-tight mb-2">
-                {step === 1 ? "Create Account" : "Verify Email"}
+              <h1 className="text-3xl font-black text-white tracking-tighter mb-3 uppercase italic">
+                {step === 1 ? "New Identity" : "Auth Protocol"}
               </h1>
-              <p className="text-white/40 text-sm font-medium leading-relaxed">
+              <p className="text-white/40 text-xs font-black tracking-widest uppercase">
                 {step === 1
-                  ? "Start your smart budgeting journey today."
-                  : `Enter the 6-digit code sent to your email.`}
+                  ? "Initialize your financial core."
+                  : `Decrypting access token Sent To Inbox.`}
               </p>
             </motion.div>
           </div>
@@ -124,17 +118,17 @@ const OtpSignupPage = () => {
             {step === 1 ? (
               <motion.form
                 key="step1"
-                initial={{ opacity: 0, x: -10 }}
+                initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: 10 }}
+                exit={{ opacity: 0, x: 20 }}
                 onSubmit={handleSendOtp}
-                className="space-y-5"
+                className="space-y-6"
               >
                 <div className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="name" className="text-white/50 text-[10px] font-bold uppercase tracking-[0.2em] ml-1">Full Name</Label>
+                    <Label htmlFor="name" className="text-white/30 text-[10px] font-black uppercase tracking-[0.3em] ml-2">Display Name</Label>
                     <div className="relative group">
-                      <User className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-emerald-500 transition-colors" />
+                      <User className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-white/10 group-focus-within:text-purple-500 transition-colors" />
                       <input
                         id="name"
                         type="text"
@@ -142,16 +136,16 @@ const OtpSignupPage = () => {
                         value={formData.name}
                         onChange={handleChange}
                         required
-                        className="w-full pl-12 pr-4 py-4 bg-white/[0.03] border border-white/10 rounded-2xl text-white placeholder-white/10 focus:outline-none focus:border-emerald-500/30 focus:bg-white/[0.05] transition-all"
-                        placeholder="John Doe"
+                        className="w-full pl-14 pr-6 py-5 glass-morphism !bg-white/[0.02] rounded-2xl text-white font-bold placeholder-white/5 focus:outline-none focus:!bg-white/[0.05] focus:border-purple-500/30 transition-all border-transparent"
+                        placeholder="ENTITY NAME"
                       />
                     </div>
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="email" className="text-white/50 text-[10px] font-bold uppercase tracking-[0.2em] ml-1">Email Address</Label>
+                    <Label htmlFor="email" className="text-white/30 text-[10px] font-black uppercase tracking-[0.3em] ml-2">Network Address</Label>
                     <div className="relative group">
-                      <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-emerald-500 transition-colors" />
+                      <Mail className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-white/10 group-focus-within:text-purple-500 transition-colors" />
                       <input
                         id="email"
                         type="email"
@@ -159,8 +153,8 @@ const OtpSignupPage = () => {
                         value={formData.email}
                         onChange={handleChange}
                         required
-                        className="w-full pl-12 pr-4 py-4 bg-white/[0.03] border border-white/10 rounded-2xl text-white placeholder-white/10 focus:outline-none focus:border-emerald-500/30 focus:bg-white/[0.05] transition-all"
-                        placeholder="john@example.com"
+                        className="w-full pl-14 pr-6 py-5 glass-morphism !bg-white/[0.02] rounded-2xl text-white font-bold placeholder-white/5 focus:outline-none focus:!bg-white/[0.05] focus:border-purple-500/30 transition-all border-transparent"
+                        placeholder="ENTITY@DOMAIN.COM"
                       />
                     </div>
                   </div>
@@ -169,13 +163,13 @@ const OtpSignupPage = () => {
                 <Button
                   type="submit"
                   disabled={otpLoading}
-                  className="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-6 rounded-2xl font-bold text-lg shadow-lg shadow-emerald-600/20 transition-all transform active:scale-[0.98] group mt-2"
+                  className="w-full bg-purple-600 hover:bg-purple-500 text-white py-8 rounded-[1.5rem] font-black text-xs tracking-[0.2em] shadow-2xl shadow-purple-600/20 transition-all transform active:scale-[0.98] group mt-4"
                 >
                   {otpLoading ? (
-                    <RefreshCw className="w-5 h-5 animate-spin" />
+                    <RefreshCw className="w-6 h-6 animate-spin" />
                   ) : (
-                    <span className="flex items-center justify-center gap-2">
-                      Get Secure Code <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                    <span className="flex items-center justify-center gap-3">
+                      GENERATE KEY <ArrowRight className="w-5 h-5 group-hover:translate-x-2 transition-transform" />
                     </span>
                   )}
                 </Button>
@@ -183,16 +177,16 @@ const OtpSignupPage = () => {
             ) : (
               <motion.form
                 key="step2"
-                initial={{ opacity: 0, x: 10 }}
+                initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -10 }}
+                exit={{ opacity: 0, x: -20 }}
                 onSubmit={handleVerify}
-                className="space-y-6"
+                className="space-y-8"
               >
-                <div className="space-y-2">
-                  <Label htmlFor="otp" className="text-white/50 text-[10px] font-bold uppercase tracking-[0.2em] ml-1">Verification Code</Label>
+                <div className="space-y-3">
+                  <Label htmlFor="otp" className="text-white/30 text-[10px] font-black uppercase tracking-[0.3em] ml-2">Dynamic Passcode</Label>
                   <div className="relative group">
-                    <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-emerald-500 transition-colors" />
+                    <Lock className="absolute left-5 top-1/2 -translate-y-1/2 w-5 h-5 text-white/10 group-focus-within:text-purple-500 transition-colors" />
                     <input
                       id="otp"
                       type="text"
@@ -201,70 +195,70 @@ const OtpSignupPage = () => {
                       onChange={handleChange}
                       required
                       maxLength={6}
-                      className="w-full pl-12 pr-4 py-4 bg-white/[0.03] border border-white/10 rounded-2xl text-white placeholder-white/10 focus:outline-none focus:border-emerald-500/30 focus:bg-white/[0.05] transition-all tracking-[0.5em] font-bold text-center text-xl"
+                      className="w-full pl-14 pr-6 py-5 glass-morphism !bg-white/[0.02] rounded-2xl text-white placeholder-white/5 focus:outline-none focus:!bg-white/[0.05] transition-all tracking-[0.8em] font-black text-center text-2xl border-transparent"
                       placeholder="••••••"
                     />
                   </div>
-                  <div className="flex justify-between items-center mt-2 px-1">
+                  <div className="flex justify-between items-center mt-3 px-2">
                     {timeLeft > 0 ? (
-                      <p className="text-[10px] text-white/20 font-bold uppercase tracking-wider flex items-center gap-1.5">
-                        <Clock className="w-3 h-3" /> Expires in {formatTime(timeLeft)}
+                      <p className="text-[10px] text-white/20 font-black uppercase tracking-widest flex items-center gap-2">
+                        <Clock className="w-3 h-3 text-purple-500/40" /> Token Valid: {formatTime(timeLeft)}
                       </p>
                     ) : (
-                      <p className="text-[10px] text-red-400/60 font-bold uppercase tracking-wider flex items-center gap-1.5">
-                        Code expired
+                      <p className="text-[10px] text-red-500/60 font-black uppercase tracking-widest flex items-center gap-2">
+                        <AlertCircle className="w-3 h-3" /> Token Expired
                       </p>
                     )}
                   </div>
                 </div>
 
-                <div className="bg-amber-500/5 border border-amber-500/10 rounded-xl p-3 mb-2">
-                  <p className="text-[10px] text-amber-200/40 text-center leading-relaxed font-medium">
-                    <span className="text-amber-400 font-bold uppercase tracking-wider">Note:</span> Real emails aren't enabled. Find your code in the <strong className="text-amber-300">Browser Console (F12)</strong>.
+                <div className="glass-morphism !bg-amber-500/5 !border-amber-500/10 rounded-2xl p-4">
+                  <p className="text-[9px] text-amber-200/40 text-center leading-relaxed font-black tracking-wider uppercase">
+                    Protocol Note: Check Browser Console for Debug OTP
                   </p>
                 </div>
 
                 <Button
                   type="submit"
                   disabled={authLoading || otpLoading}
-                  className="w-full bg-emerald-600 hover:bg-emerald-500 text-white py-6 rounded-2xl font-bold text-lg shadow-lg shadow-emerald-600/20 transition-all transform active:scale-[0.98]"
+                  className="w-full bg-purple-600 hover:bg-purple-500 text-white py-8 rounded-[1.5rem] font-black text-xs tracking-[0.2em] shadow-2xl shadow-purple-600/20 transition-all transform active:scale-[0.98]"
                 >
                   {authLoading ? (
-                    <RefreshCw className="w-5 h-5 animate-spin" />
+                    <RefreshCw className="w-6 h-6 animate-spin" />
                   ) : (
-                    <span className="flex items-center justify-center gap-2">
-                      Verify & Join <CheckCircle2 className="w-5 h-5" />
+                    <span className="flex items-center justify-center gap-3">
+                      AUTHORIZE ACCESS <CheckCircle2 className="w-5 h-5" />
                     </span>
                   )}
                 </Button>
 
-                <div className="flex justify-between items-center px-1 pt-2">
+                <div className="flex justify-between items-center px-2 pt-4 border-t border-white/5">
                   <button
                     type="button"
                     onClick={() => setStep(1)}
-                    className="text-white/30 hover:text-white transition-colors text-[10px] font-bold uppercase tracking-wider"
+                    className="text-white/20 hover:text-white transition-colors text-[9px] font-black uppercase tracking-[0.2em]"
                   >
-                    Change Details
+                    RETURN TO ID
                   </button>
                   <button
                     type="button"
                     onClick={handleResend}
                     disabled={otpLoading}
-                    className="flex items-center gap-2 text-emerald-400/60 hover:text-emerald-400 transition-colors text-[10px] font-bold uppercase tracking-wider"
+                    className="flex items-center gap-2 text-purple-400/40 hover:text-purple-400 transition-colors text-[9px] font-black uppercase tracking-[0.2em]"
                   >
                     <RefreshCw className={`w-3 h-3 ${otpLoading ? 'animate-spin' : ''}`} />
-                    Resend Code
+                    RE-REQUEST
                   </button>
                 </div>
               </motion.form>
             )}
           </AnimatePresence>
 
-          <div className="mt-10 text-center pt-8 border-t border-white/5">
-            <p className="text-white/20 text-xs font-medium">
-              Already a member?{' '}
-              <Link to="/otp-login" className="text-white hover:text-emerald-400 transition-all ml-1 font-bold underline underline-offset-4 decoration-white/10 hover:decoration-emerald-400/40">
-                Log In
+          <div className="mt-12 text-center pt-8 border-t border-white/5">
+            <p className="text-white/20 text-[10px] font-black uppercase tracking-widest">
+              Already Registered?{' '}
+              <Link to="/otp-login" className="text-white hover:text-purple-400 transition-all ml-2 underline underline-offset-8 decoration-white/10 hover:decoration-purple-400">
+                Log In Tunnel
               </Link>
             </p>
           </div>

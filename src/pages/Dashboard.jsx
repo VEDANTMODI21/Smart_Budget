@@ -187,31 +187,37 @@ const Dashboard = () => {
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="max-w-7xl mx-auto px-4 py-8 sm:px-6 lg:px-8 space-y-8"
+        className="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8 space-y-12"
       >
         {/* Welcome Section */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <motion.div variants={itemVariants}>
-            <h1 className="text-3xl font-bold text-white tracking-tight">
-              Welcome back, <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">{user?.name?.split(' ')[0]}!</span>
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <motion.div variants={itemVariants} className="space-y-2">
+            <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight leading-none">
+              Welcome back, <br />
+              <span className="text-gradient">
+                {user?.name?.split(' ')[0]}!
+              </span>
             </h1>
-            <p className="text-white/40 text-sm mt-1">Here's what's happening with your budget today.</p>
+            <p className="text-white/40 text-lg font-medium">Your financial overview is looking sharp today.</p>
           </motion.div>
 
-          <motion.div variants={itemVariants} className="flex items-center gap-3">
+          <motion.div variants={itemVariants} className="flex items-center gap-4">
             <div className="text-right hidden sm:block">
-              <p className="text-xs text-white/40 uppercase font-bold tracking-widest">Last updated</p>
-              <p className="text-sm text-white/70">{getRelativeTime(lastUpdated)}</p>
+              <p className="text-[10px] text-white/30 uppercase font-black tracking-[0.2em] mb-1">Live Sync Status</p>
+              <div className="flex items-center gap-2 justify-end">
+                <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <p className="text-xs text-white/60 font-bold">{getRelativeTime(lastUpdated)}</p>
+              </div>
             </div>
             <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               onClick={handleRefresh}
               disabled={refreshing}
-              className="flex items-center gap-2 bg-white/10 hover:bg-white/20 backdrop-blur-xl text-white px-5 py-2.5 rounded-2xl border border-white/10 transition-all font-medium"
+              className="glass-morphism px-6 py-3 rounded-2xl flex items-center gap-3 text-white font-bold transition-all hover:bg-white/20 active:bg-white/30"
             >
               <RefreshCw className={`w-4 h-4 ${refreshing ? 'animate-spin' : ''}`} />
-              <span>{refreshing ? 'Syncing...' : 'Refresh'}</span>
+              <span>{refreshing ? 'Syncing' : 'Refresh'}</span>
             </motion.button>
           </motion.div>
         </div>
@@ -220,149 +226,176 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {loading ? (
             Array(4).fill(0).map((_, i) => (
-              <Skeleton key={i} className="h-40 w-full" />
+              <Skeleton key={i} className="h-44 w-full rounded-3xl" />
             ))
           ) : (
             statsCards.map((card, index) => (
               <motion.div
                 key={card.title}
                 variants={itemVariants}
-                whileHover={{ y: -5, transition: { duration: 0.2 } }}
-                className={`group relative overflow-hidden rounded-3xl bg-gradient-to-br ${card.gradient} backdrop-blur-md p-6 border border-white/10`}
+                whileHover={{ y: -8, scale: 1.02 }}
+                className={`group relative glass-card p-6 rounded-[2rem] overflow-hidden premium-glow ${index % 2 === 0 ? 'glow-blue' : 'glow-purple'}`}
               >
-                <div className="relative z-10">
-                  <div className="flex items-start justify-between mb-4">
-                    <div className={`p-3 rounded-2xl ${card.color} shadow-lg shadow-${card.color.split('-')[1]}-500/20`}>
+                <div className="relative z-10 flex flex-col h-full justify-between">
+                  <div className="flex items-start justify-between">
+                    <div className={`p-4 rounded-2xl ${card.color} bg-opacity-20 backdrop-blur-xl border border-white/10 group-hover:scale-110 transition-transform duration-500 shadow-2xl`}>
                       <card.icon className="w-6 h-6 text-white" />
                     </div>
                     {card.trend && (
-                      <div className={`flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full ${card.trend.up ? 'bg-emerald-500/20 text-emerald-400' : 'bg-red-500/20 text-red-400'}`}>
-                        {card.trend.up ? <ArrowUpRight className="w-3 h-3" /> : <ArrowDownRight className="w-3 h-3" />}
-                        {card.trend.value}
+                      <div className={`flex items-center gap-1.5 text-[10px] font-black px-3 py-1.5 rounded-full backdrop-blur-md border border-white/5 ${card.trend.up ? 'bg-emerald-500/10 text-emerald-400' : 'bg-red-500/10 text-red-400'}`}>
+                        {card.trend.up ? <ArrowUpRight className="w-3.5 h-3.5" /> : <ArrowDownRight className="w-3.5 h-3.5" />}
+                        {card.trend.value.toUpperCase()}
                       </div>
                     )}
                   </div>
-                  <h3 className="text-white/40 text-[10px] font-bold uppercase tracking-[0.1em] mb-1">{card.title}</h3>
-                  <p className="text-2xl font-bold text-white mb-0.5 tracking-tight">{card.value}</p>
-                  <p className="text-[10px] text-white/20 font-medium">{card.subtitle}</p>
+
+                  <div className="mt-8">
+                    <h3 className="text-white/40 text-[10px] font-black uppercase tracking-[0.2em] mb-1">{card.title}</h3>
+                    <div className="flex items-baseline gap-2">
+                      <span className="text-3xl font-black text-white tracking-tighter">{card.value}</span>
+                    </div>
+                    <p className="text-xs text-white/20 font-bold mt-1">{card.subtitle}</p>
+                  </div>
                 </div>
-                {/* Decorative background element */}
-                <div className="absolute -right-4 -bottom-4 w-24 h-24 bg-white/5 rounded-full blur-2xl group-hover:bg-white/10 transition-colors" />
+
+                {/* Animated Background Decorative Element */}
+                <div className="absolute -right-6 -bottom-6 w-32 h-32 bg-white/5 rounded-full blur-3xl group-hover:bg-white/10 transition-all duration-700 group-hover:scale-150" />
               </motion.div>
             ))
           )}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
           {/* Main List Section */}
-          <motion.div variants={itemVariants} className="space-y-6">
-            <div className="bg-white/5 backdrop-blur-xl rounded-[2.5rem] p-8 border border-white/10">
-              <div className="flex items-center justify-between mb-8">
-                <div className="flex items-center gap-3">
-                  <div className="bg-blue-500/20 p-2.5 rounded-xl">
-                    <Receipt className="w-6 h-6 text-blue-400" />
+          <motion.div variants={itemVariants} className="lg:col-span-8 space-y-6">
+            <div className="glass-card rounded-[2.5rem] p-8 md:p-10 relative overflow-hidden">
+              <div className="flex items-center justify-between mb-10 relative z-10">
+                <div className="flex items-center gap-4">
+                  <div className="bg-blue-500/20 p-3 rounded-2xl border border-blue-500/20 shadow-inner">
+                    <Receipt className="w-7 h-7 text-blue-400" />
                   </div>
-                  <h2 className="text-2xl font-black text-white tracking-tight">Recent Activity</h2>
+                  <div>
+                    <h2 className="text-2xl font-black text-white tracking-tight">Recent Activity</h2>
+                    <p className="text-white/30 text-xs font-bold uppercase tracking-widest mt-0.5">Transaction Timeline</p>
+                  </div>
                 </div>
-                <button className="text-white/40 hover:text-white transition-colors">
-                  <MoreHorizontal className="w-6 h-6" />
+                <button className="hover:bg-white/5 p-2 rounded-xl transition-colors">
+                  <MoreHorizontal className="w-7 h-7 text-white/30" />
                 </button>
               </div>
 
               {loading ? (
                 <div className="space-y-4">
-                  {Array(4).fill(0).map((_, i) => <Skeleton key={i} className="h-20 w-full" />)}
+                  {Array(4).fill(0).map((_, i) => <Skeleton key={i} className="h-24 w-full rounded-2xl" />)}
                 </div>
               ) : stats.recentExpenses.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mb-4">
-                    <Receipt className="w-8 h-8 text-white/20" />
+                <div className="flex flex-col items-center justify-center py-20 text-center relative z-10">
+                  <div className="w-24 h-24 bg-white/5 rounded-3xl flex items-center justify-center mb-6 animate-float">
+                    <Receipt className="w-12 h-12 text-white/10" />
                   </div>
-                  <p className="text-white/40 font-medium mb-6">No expenses logged yet.</p>
+                  <p className="text-white/40 text-lg font-bold mb-8">Your expense log is currently empty.</p>
                   <button
                     onClick={() => window.location.href = '/expenses-tracker'}
-                    className="flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-6 py-3 rounded-2xl font-black shadow-lg shadow-blue-500/20 transition-all active:scale-95"
+                    className="group flex items-center gap-3 bg-white text-[#030711] px-8 py-4 rounded-2xl font-black transition-all hover:scale-105 active:scale-95 shadow-2xl shadow-white/10"
                   >
-                    <Plus className="w-5 h-5" />
-                    Add Your First Expense
+                    <Plus className="w-6 h-6" />
+                    Record First Expense
                   </button>
                 </div>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-4 relative z-10">
                   {stats.recentExpenses.map((expense, index) => (
                     <motion.div
                       key={expense.id}
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: index * 0.05 }}
-                      className="group bg-white/5 hover:bg-white/10 rounded-2xl p-4 border border-white/5 transition-all flex justify-between items-center cursor-pointer"
+                      whileHover={{ x: 10 }}
+                      className="group glass-morphism !bg-white/[0.02] hover:!bg-white/[0.06] rounded-2xl p-5 transition-all flex justify-between items-center cursor-pointer border-transparent hover:border-white/10"
                     >
-                      <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 bg-white/5 rounded-2xl flex items-center justify-center text-xl overflow-hidden">
+                      <div className="flex items-center gap-5">
+                        <div className="w-14 h-14 glass-morphism rounded-2xl flex items-center justify-center text-2xl group-hover:scale-110 transition-transform shadow-xl">
                           {expense.category?.charAt(0) || '💰'}
                         </div>
                         <div>
-                          <h3 className="text-white font-bold group-hover:text-blue-400 transition-colors">{expense.title || expense.description}</h3>
-                          <p className="text-white/40 text-xs font-semibold">
-                            {expense.category} • {new Date(expense.date).toLocaleDateString()}
-                          </p>
+                          <h3 className="text-white text-lg font-black tracking-tight group-hover:text-blue-400 transition-colors uppercase">{expense.title || expense.description}</h3>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className="text-blue-400/60 text-[10px] font-black uppercase tracking-wider">{expense.category}</span>
+                            <span className="text-white/20 text-[10px] font-black">•</span>
+                            <span className="text-white/30 text-[10px] font-black uppercase tracking-wider">{new Date(expense.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                          </div>
                         </div>
                       </div>
                       <div className="text-right">
-                        <p className="text-xl font-black text-white">${parseFloat(expense.amount).toFixed(2)}</p>
+                        <p className="text-2xl font-black text-white tracking-tighter group-hover:scale-110 transition-transform">${parseFloat(expense.amount).toFixed(2)}</p>
                       </div>
                     </motion.div>
                   ))}
                 </div>
               )}
+
+              {/* Decorative side blob */}
+              <div className="absolute -left-20 -bottom-20 w-64 h-64 bg-blue-500/5 rounded-full blur-[100px] pointer-events-none" />
             </div>
           </motion.div>
 
           {/* Side Panels */}
-          <motion.div variants={itemVariants} className="space-y-8">
+          <motion.div variants={itemVariants} className="lg:col-span-4 space-y-8">
             {/* Reminders Panel */}
-            <div className="bg-white/5 backdrop-blur-xl rounded-[2.5rem] p-8 border border-white/10">
-              <div className="flex items-center justify-between mb-8">
+            <div className="glass-card rounded-[2.5rem] p-8 relative overflow-hidden">
+              <div className="flex items-center justify-between mb-8 relative z-10">
                 <div className="flex items-center gap-3">
-                  <div className="bg-amber-500/20 p-2.5 rounded-xl">
+                  <div className="bg-amber-500/20 p-2.5 rounded-xl border border-amber-500/10">
                     <Bell className="w-6 h-6 text-amber-400" />
                   </div>
-                  <h2 className="text-2xl font-black text-white tracking-tight">Alerts</h2>
+                  <h2 className="text-xl font-black text-white tracking-tight">System Alerts</h2>
                 </div>
-                <span className="bg-amber-500/20 text-amber-400 text-xs font-bold px-3 py-1 rounded-full">
-                  {stats.activeReminders.length} Active
-                </span>
+                {stats.activeReminders.length > 0 && (
+                  <motion.div
+                    animate={{ scale: [1, 1.1, 1] }}
+                    transition={{ duration: 2, repeat: Infinity }}
+                    className="bg-amber-500 text-[#030711] text-[10px] font-black px-2.5 py-1 rounded-full shadow-lg shadow-amber-500/20"
+                  >
+                    {stats.activeReminders.length}
+                  </motion.div>
+                )}
               </div>
 
               {loading ? (
                 <div className="space-y-4">
-                  {Array(3).fill(0).map((_, i) => <Skeleton key={i} className="h-20 w-full" />)}
+                  {Array(3).fill(0).map((_, i) => <Skeleton key={i} className="h-20 w-full rounded-2xl" />)}
                 </div>
               ) : stats.activeReminders.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-8 text-center text-white/40">
-                  <Calendar className="w-12 h-12 mb-2 opacity-20" />
-                  <p>All caught up!</p>
+                <div className="flex flex-col items-center justify-center py-12 text-center text-white/20 relative z-10">
+                  <div className="p-4 rounded-full bg-white/5 mb-4 blur-sm">
+                    <Calendar className="w-10 h-10 opacity-20" />
+                  </div>
+                  <p className="text-sm font-bold uppercase tracking-widest">No Alerts Pending</p>
                 </div>
               ) : (
-                <div className="space-y-4">
+                <div className="space-y-4 relative z-10">
                   {stats.activeReminders.slice(0, 3).map((reminder, index) => (
                     <motion.div
                       key={reminder.id}
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: index * 0.05 }}
-                      className="bg-white/5 rounded-2xl p-4 border border-white/5 flex items-center gap-4 border-l-4 border-l-amber-500"
+                      initial={{ opacity: 0, x: 20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="glass-morphism !bg-white/[0.02] hover:!bg-white/[0.05] rounded-2xl p-4 flex items-center gap-4 border-l-[6px] border-l-amber-500 transition-all cursor-pointer"
                     >
-                      <div className="w-10 h-10 bg-amber-500/10 rounded-xl flex items-center justify-center">
-                        <Calendar className="w-5 h-5 text-amber-300" />
+                      <div className="w-12 h-12 glass-morphism rounded-xl flex items-center justify-center shadow-lg">
+                        <Calendar className="w-6 h-6 text-amber-400" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <h3 className="text-white font-bold truncate text-sm">{reminder.title}</h3>
-                        <div className="flex items-center gap-3 mt-1">
-                          <span className="text-[10px] text-white/40 font-bold uppercase tracking-tighter">
-                            {new Date(reminder.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
-                          </span>
-                          <span className="text-[10px] text-white/40 font-bold uppercase tracking-tighter">
+                        <h3 className="text-white font-black truncate text-sm uppercase tracking-tight">{reminder.title}</h3>
+                        <div className="flex items-center gap-3 mt-1.5">
+                          <div className="flex items-center gap-1">
+                            <div className="w-1 h-1 rounded-full bg-amber-500" />
+                            <span className="text-[10px] text-white/40 font-black uppercase tracking-widest">
+                              {new Date(reminder.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}
+                            </span>
+                          </div>
+                          <span className="text-[10px] text-white/20 font-black">|</span>
+                          <span className="text-[10px] text-white/40 font-black uppercase tracking-widest">
                             {reminder.time}
                           </span>
                         </div>
@@ -373,24 +406,37 @@ const Dashboard = () => {
               )}
             </div>
 
-            {/* Feature Tip Panel */}
-            <div className="bg-gradient-to-br from-indigo-600 to-purple-700 rounded-[2.5rem] p-8 text-white relative overflow-hidden group shadow-2xl shadow-purple-500/20">
+            {/* Premium Callout */}
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              className="group relative bg-gradient-to-br from-blue-600 to-indigo-800 rounded-[2.5rem] p-10 text-white overflow-hidden shadow-2xl shadow-blue-500/20 cursor-pointer"
+            >
               <div className="relative z-10">
-                <h3 className="text-xl font-black mb-2 flex items-center gap-2">
-                  Pro Tip <span className="inline-block animate-bounce">⚡</span>
+                <div className="inline-flex items-center gap-2 bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-[0.2em] mb-6">
+                  Featured Tool
+                </div>
+                <h3 className="text-3xl font-black mb-4 leading-tight tracking-tighter">
+                  Settle Balances <br />
+                  <span className="text-blue-200">Instantly.</span>
                 </h3>
-                <p className="text-indigo-100/80 text-sm leading-relaxed mb-6">
-                  Check out the <strong>Settlements</strong> tab to see who owes you money and clear debts in one tap.
+                <p className="text-blue-100/60 text-sm font-medium leading-relaxed mb-8 max-w-[200px]">
+                  Take control of your shared finances with automated settlements.
                 </p>
                 <button
                   onClick={() => window.location.href = '/settlements'}
-                  className="bg-white text-indigo-600 px-6 py-2.5 rounded-xl font-black text-sm hover:bg-indigo-50 transition-colors shadow-lg"
+                  className="bg-white text-indigo-900 px-8 py-3.5 rounded-2xl font-black text-sm transition-all hover:bg-blue-50 hover:shadow-xl active:scale-95"
                 >
-                  Go to Settlements
+                  Manage Now
                 </button>
               </div>
-              <div className="absolute -right-8 -top-8 w-40 h-40 bg-white/10 rounded-full blur-3xl group-hover:scale-110 transition-transform duration-700" />
-            </div>
+
+              {/* Abstract decorative elements */}
+              <div className="absolute right-[-20px] top-[-20px] w-40 h-40 bg-white/10 rounded-full blur-3xl group-hover:scale-125 transition-transform duration-1000" />
+              <div className="absolute left-[-20px] bottom-[-20px] w-32 h-32 bg-blue-400/20 rounded-full blur-2xl animate-pulse" />
+              <div className="absolute top-10 right-10 opacity-20 group-hover:rotate-12 transition-transform duration-700">
+                <Users size={80} />
+              </div>
+            </motion.div>
           </motion.div>
         </div>
       </motion.main>
