@@ -70,6 +70,10 @@ const SettlementTracker = () => {
   };
 
   const markAsPaid = async (settlement) => {
+    const originalSettlements = [...settlements];
+    // Update UI immediately (Optimistic)
+    setSettlements(prev => prev.filter(s => s !== settlement));
+
     try {
       // Update all participants for this settlement
       const participantIds = settlement.participants.map(p => p.id);
@@ -86,9 +90,13 @@ const SettlementTracker = () => {
         description: "Settlement marked as paid!",
       });
 
-      fetchSettlements();
+      // No need to fetchSettlements() as we already updated the UI optimistically
+      // But we can do it if we want to be sure
+      // fetchSettlements();
     } catch (error) {
       console.error('Error updating settlement:', error);
+      // Rollback on error
+      setSettlements(originalSettlements);
       toast({
         variant: "destructive",
         title: "Error",

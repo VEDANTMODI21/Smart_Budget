@@ -59,36 +59,61 @@ export default function ExpenseTracker() {
     e.preventDefault();
     if (!formData.title.trim() || !formData.amount.trim()) return;
 
+    const tempId = Date.now().toString();
+    const optimisticExpense = {
+      id: tempId,
+      title: formData.title.trim(),
+      description: formData.description.trim(),
+      amount: parseFloat(formData.amount),
+      category: formData.category,
+      date: formData.date,
+      optimistic: true
+    };
+
+    // Update UI immediately
+    setExpenses(prev => [optimisticExpense, ...prev]);
+    const savedFormData = { ...formData };
+    setFormData({
+      title: '',
+      description: '',
+      amount: '',
+      category: 'Food',
+      date: new Date().toISOString().split('T')[0]
+    });
+
     try {
       setSubmitting(true);
       const newExpense = await expensesAPI.create({
-        title: formData.title.trim(),
-        description: formData.description.trim(),
-        amount: parseFloat(formData.amount),
-        category: formData.category,
-        date: formData.date
+        title: optimisticExpense.title,
+        description: optimisticExpense.description,
+        amount: optimisticExpense.amount,
+        category: optimisticExpense.category,
+        date: optimisticExpense.date
       });
-      setExpenses([newExpense, ...expenses]);
-      setFormData({
-        title: '',
-        description: '',
-        amount: '',
-        category: 'Food',
-        date: new Date().toISOString().split('T')[0]
-      });
+
+      // Replace optimistic item with actual item from server
+      setExpenses(prev => prev.map(exp => exp.id === tempId ? newExpense : exp));
     } catch (error) {
       console.error('Error adding expense:', error);
+      // Rollback on error
+      setExpenses(prev => prev.filter(exp => exp.id !== tempId));
+      setFormData(savedFormData);
     } finally {
       setSubmitting(false);
     }
   };
 
   const handleDeleteExpense = async (id) => {
+    const originalExpenses = [...expenses];
+    // Update UI immediately
+    setExpenses(prev => prev.filter(expense => expense.id !== id));
+
     try {
       await expensesAPI.delete(id);
-      setExpenses(expenses.filter(expense => expense.id !== id));
     } catch (error) {
       console.error('Error deleting expense:', error);
+      // Rollback on error
+      setExpenses(originalExpenses);
     }
   };
 

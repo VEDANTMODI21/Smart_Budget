@@ -35,5 +35,8 @@ const settlementSchema = new mongoose.Schema({
   }
 });
 
+// Add index for faster queries
+settlementSchema.index({ userId: 1, settled: 1 });
+
 export default mongoose.model('Settlement', settlementSchema);
 

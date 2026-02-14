@@ -36,5 +36,8 @@ const expenseSchema = new mongoose.Schema({
   }
 });
 
+// Add index for faster queries by user and date sorting
+expenseSchema.index({ userId: 1, date: -1 });
+
 export default mongoose.model('Expense', expenseSchema);
 

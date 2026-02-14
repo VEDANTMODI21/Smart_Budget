@@ -33,5 +33,8 @@ const reminderSchema = new mongoose.Schema({
   }
 });
 
+// Add index for faster queries
+reminderSchema.index({ userId: 1, date: 1 });
+
 export default mongoose.model('Reminder', reminderSchema);
 

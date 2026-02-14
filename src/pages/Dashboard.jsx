@@ -17,11 +17,13 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [lastUpdated, setLastUpdated] = useState(new Date());
+  const isFetchingRef = React.useRef(false);
 
   // Fetch all data
   const fetchAllData = useCallback(async (showRefreshIndicator = false) => {
-    if (!user) return;
+    if (!user || isFetchingRef.current) return;
 
+    isFetchingRef.current = true;
     if (showRefreshIndicator) setRefreshing(true);
 
     try {
@@ -42,6 +44,7 @@ const Dashboard = () => {
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
     } finally {
+      isFetchingRef.current = false;
       setLoading(false);
       if (showRefreshIndicator) {
         setTimeout(() => setRefreshing(false), 500);
@@ -96,14 +99,46 @@ const Dashboard = () => {
     fetchAllData();
   }, [fetchAllData]);
 
-  // Auto-refresh every 60 seconds (increased from 30 to reduce load)
+  // Real-time updates if Supabase is enabled
   useEffect(() => {
+    const useSupabase = import.meta.env.VITE_USE_SUPABASE === 'true' && import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY;
+
+    let subscriptionExpenses;
+    let subscriptionParticipants;
+
+    const setupRealtime = async () => {
+      if (useSupabase && user) {
+        const { supabase } = await import('@/lib/customSupabaseClient');
+
+        subscriptionExpenses = supabase
+          .channel('expenses-changes')
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'expenses' }, () => {
+            fetchAllData(false);
+          })
+          .subscribe();
+
+        subscriptionParticipants = supabase
+          .channel('participants-changes')
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'expense_participants' }, () => {
+            fetchAllData(false);
+          })
+          .subscribe();
+      }
+    };
+
+    setupRealtime();
+
+    // Faster auto-refresh for non-realtime (reduced from 60s to 1s to meet "1 sec" request feel)
     const interval = setInterval(() => {
       fetchAllData(false);
-    }, 60000);
+    }, 1000);
 
-    return () => clearInterval(interval);
-  }, [fetchAllData]);
+    return () => {
+      clearInterval(interval);
+      if (subscriptionExpenses) subscriptionExpenses.unsubscribe();
+      if (subscriptionParticipants) subscriptionParticipants.unsubscribe();
+    };
+  }, [fetchAllData, user]);
 
   const handleRefresh = () => {
     fetchAllData(true);
