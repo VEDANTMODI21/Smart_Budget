@@ -6,7 +6,8 @@ const getApiUrl = () => {
   if (hostname === 'localhost' || hostname === '127.0.0.1') {
     return 'http://localhost:5000';
   }
-  return `http://${hostname}:5000`;
+  // In production, don't assume port 5000 unless specified via VITE_API_URL
+  return '';
 };
 
 const API_URL = getApiUrl();

@@ -1,7 +1,9 @@
 import { supabase } from './customSupabaseClient';
 
-// Determine if we should use Supabase
-const useSupabase = import.meta.env.VITE_USE_SUPABASE === 'true' && import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY;
+// Determine if we should use Supabase. Default to true if keys are present in production.
+const useSupabase =
+  import.meta.env.VITE_USE_SUPABASE === 'true' ||
+  (import.meta.env.VITE_SUPABASE_URL && import.meta.env.VITE_SUPABASE_ANON_KEY && import.meta.env.MODE === 'production');
 
 const getApiUrl = () => {
   if (import.meta.env.VITE_API_URL) return import.meta.env.VITE_API_URL;
@@ -9,7 +11,8 @@ const getApiUrl = () => {
   if (hostname === 'localhost' || hostname === '127.0.0.1') {
     return 'http://localhost:5000';
   }
-  return `http://${hostname}:5000`;
+  // In production, don't assume port 5000 unless specified via VITE_API_URL
+  return '';
 };
 
 const API_URL = getApiUrl();
