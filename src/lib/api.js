@@ -67,15 +67,32 @@ export const authAPI = {
 
 // Expenses API
 export const expensesAPI = {
-  getAll: async () => {
+  getAll: async (filters = {}) => {
     if (useSupabase) {
-      const { data, error } = await supabase
+      let query = supabase
         .from('expenses')
-        .select('*')
+        .select(`
+          *,
+          expense_participants (
+            id,
+            user_id,
+            amount_owed,
+            paid_status,
+            users (name, email)
+          )
+        `)
         .order('date', { ascending: false });
+
+      if (filters.category) query = query.eq('category', filters.category);
+      if (filters.startDate) query = query.gte('date', filters.startDate);
+      if (filters.endDate) query = query.lte('date', filters.endDate);
+
+      const { data, error } = await query;
       return handleSupabaseError(error, data);
     }
-    const res = await fetch(`${API_URL}/api/expenses`, {
+
+    const queryParams = new URLSearchParams(filters).toString();
+    const res = await fetch(`${API_URL}/api/expenses${queryParams ? '?' + queryParams : ''}`, {
       headers: getAuthHeaders()
     });
     return handleResponse(res);
@@ -145,6 +162,47 @@ export const expensesAPI = {
     });
     return handleResponse(res);
   },
+
+  generateShareLink: async () => {
+    if (useSupabase) {
+      const shareToken = crypto.randomUUID();
+      const { data: { user } } = await supabase.auth.getUser();
+      const { error } = await supabase
+        .from('expenses')
+        .update({
+          share_token: shareToken,
+          share_created_at: new Date().toISOString(),
+        })
+        .eq('user_id', user.id);
+      if (error) throw error;
+      return { shareToken };
+    }
+    const res = await fetch(`${API_URL}/api/expenses/share`, {
+      method: 'POST',
+      headers: getAuthHeaders()
+    });
+    return handleResponse(res);
+  },
+
+  getShared: async (token) => {
+    if (useSupabase) {
+      const { data, error } = await supabase
+        .from('expenses')
+        .select(`
+          *,
+          expense_participants (
+            amount_owed,
+            paid_status,
+            users (name)
+          )
+        `)
+        .eq('share_token', token)
+        .order('date', { ascending: false });
+      return handleSupabaseError(error, data);
+    }
+    const res = await fetch(`${API_URL}/api/expenses/shared/${token}`);
+    return handleResponse(res);
+  },
 };
 
 // Settlements API
@@ -203,6 +261,23 @@ export const settlementsAPI = {
       method: 'PUT',
       headers: getAuthHeaders(),
       body: JSON.stringify(settlement)
+    });
+    return handleResponse(res);
+  },
+
+  markAsPaid: async (participantIds) => {
+    if (useSupabase) {
+      const { data, error } = await supabase
+        .from('expense_participants')
+        .update({ paid_status: true })
+        .in('id', participantIds);
+      return handleSupabaseError(error, data);
+    }
+    // Local backend bulk update
+    const res = await fetch(`${API_URL}/api/settlements/bulk-update`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ ids: participantIds, updates: { paid_status: true } })
     });
     return handleResponse(res);
   },
@@ -276,6 +351,28 @@ export const remindersAPI = {
       method: 'PUT',
       headers: getAuthHeaders(),
       body: JSON.stringify(reminder)
+    });
+    return handleResponse(res);
+  },
+
+  sendReminder: async (debt) => {
+    if (useSupabase) {
+      const { data, error } = await supabase.functions.invoke('send-reminder-email', {
+        body: JSON.stringify({
+          debtor_email: debt.users.email,
+          debtor_name: debt.users.name,
+          creditor_email: debt.expenses.users.email,
+          creditor_name: debt.expenses.users.name,
+          amount: debt.amount_owed,
+          expense_description: debt.expenses.description,
+        }),
+      });
+      return handleSupabaseError(error, data);
+    }
+    const res = await fetch(`${API_URL}/api/reminders/send`, {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ debtId: debt.id })
     });
     return handleResponse(res);
   },

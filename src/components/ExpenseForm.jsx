@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, DollarSign, Tag, Calendar, FileText, Save, Loader2 } from 'lucide-react';
-import { supabase } from '@/lib/customSupabaseClient';
+import { expensesAPI } from '@/lib/api';
 import { useAuth } from '@/Contexts/AuthContext';
 import { Button } from './ui/button';
 import { Input } from './ui/input';
@@ -52,23 +52,15 @@ export default function ExpenseForm({ expense, onClose, onSuccess }) {
         user_id: user.id,
       };
 
-      let error;
+      let result;
       if (expense) {
         // Update existing
-        const { error: updateError } = await supabase
-          .from('expenses')
-          .update(expenseData)
-          .eq('id', expense.id);
-        error = updateError;
+        const { id, ...updateData } = expenseData;
+        result = await expensesAPI.update(expense.id, updateData);
       } else {
         // Create new
-        const { error: insertError } = await supabase
-          .from('expenses')
-          .insert([expenseData]);
-        error = insertError;
+        result = await expensesAPI.create(expenseData);
       }
-
-      if (error) throw error;
 
       toast({
         title: expense ? "Expense Updated" : "Expense Added",

@@ -3,7 +3,7 @@ import { Helmet } from 'react-helmet';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Edit, Trash2, Filter, AlertTriangle, X, Search, Tag, Calendar, Receipt, ChevronRight } from 'lucide-react';
 import { useAuth } from '@/Contexts/AuthContext';
-import { supabase } from '@/lib/customSupabaseClient';
+import { expensesAPI } from '@/lib/api';
 import Header from '@/components/Header';
 import ExpenseForm from '@/components/ExpenseForm';
 import { Button } from '@/components/ui/button';
@@ -37,35 +37,7 @@ const ExpenseList = () => {
 
   const fetchExpenses = async () => {
     try {
-      // Explicitly filter by user_id to respect RLS and ensure we only fetch user's own expenses
-      let query = supabase
-        .from('expenses')
-        .select(`
-          *,
-          expense_participants (
-            id,
-            user_id,
-            amount_owed,
-            paid_status,
-            users (name, email)
-          )
-        `)
-        .eq('user_id', user.id)
-        .order('date', { ascending: false });
-
-      if (filters.category) {
-        query = query.eq('category', filters.category);
-      }
-      if (filters.startDate) {
-        query = query.gte('date', filters.startDate);
-      }
-      if (filters.endDate) {
-        query = query.lte('date', filters.endDate);
-      }
-
-      const { data, error } = await query;
-
-      if (error) throw error;
+      const data = await expensesAPI.getAll(filters);
       setExpenses(data || []);
     } catch (error) {
       console.error('Error fetching expenses:', error);
@@ -107,14 +79,7 @@ const ExpenseList = () => {
     if (!expenseId) return;
 
     try {
-      // Ensure we only delete expenses belonging to the authenticated user
-      const { error } = await supabase
-        .from('expenses')
-        .delete()
-        .eq('id', expenseId)
-        .eq('user_id', user.id); // Extra safety check matching RLS
-
-      if (error) throw error;
+      await expensesAPI.delete(expenseId);
 
       toast({
         title: "Success",

@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { Helmet } from 'react-helmet';
 import { motion } from 'framer-motion';
 import { Share2, AlertCircle } from 'lucide-react';
-import { supabase } from '@/lib/customSupabaseClient';
+import { expensesAPI } from '@/lib/api';
 
 const SharedExpenseView = () => {
   const { token } = useParams();
@@ -16,21 +16,9 @@ const SharedExpenseView = () => {
   }, [token]);
 
   const fetchSharedExpenses = async () => {
+    setError(null);
     try {
-      const { data, error } = await supabase
-        .from('expenses')
-        .select(`
-          *,
-          expense_participants (
-            amount_owed,
-            paid_status,
-            users (name)
-          )
-        `)
-        .eq('share_token', token)
-        .order('date', { ascending: false });
-
-      if (error) throw error;
+      const data = await expensesAPI.getShared(token);
 
       if (!data || data.length === 0) {
         setError('No expenses found with this share link.');

@@ -3,7 +3,7 @@ import { Helmet } from 'react-helmet';
 import { motion } from 'framer-motion';
 import { CheckCircle, Circle } from 'lucide-react';
 import { useAuth } from '@/Contexts/AuthContext';
-import { supabase } from '@/lib/customSupabaseClient';
+import { settlementsAPI } from '@/lib/api';
 import Header from '@/components/Header';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -19,28 +19,17 @@ const SettlementTracker = () => {
 
   const fetchSettlements = async () => {
     try {
-      // Fetch all unpaid expense participants
-      const { data: participants, error } = await supabase
-        .from('expense_participants')
-        .select(`
-          *,
-          users!expense_participants_user_id_fkey (name, email),
-          expenses (
-            user_id,
-            description,
-            users!expenses_user_id_fkey (name, email)
-          )
-        `)
-        .eq('paid_status', false);
-
-      if (error) throw error;
+      // Fetch all unpaid expense participants via API wrapper
+      const participants = await settlementsAPI.getAll();
 
       // Group by debtor and creditor
       const settlementMap = {};
 
       participants?.forEach((participant) => {
         const debtorId = participant.user_id;
-        const creditorId = participant.expenses.user_id;
+        const creditorId = participant.expenses?.user_id;
+        if (!creditorId) return; // Skip if no expense context
+
         const key = `${debtorId}-${creditorId}`;
 
         if (!settlementMap[key]) {
@@ -52,7 +41,7 @@ const SettlementTracker = () => {
           };
         }
 
-        settlementMap[key].totalAmount += parseFloat(participant.amount_owed);
+        settlementMap[key].totalAmount += parseFloat(participant.amount_owed || 0);
         settlementMap[key].participants.push(participant);
       });
 
@@ -75,24 +64,15 @@ const SettlementTracker = () => {
     setSettlements(prev => prev.filter(s => s !== settlement));
 
     try {
-      // Update all participants for this settlement
-      const participantIds = settlement.participants.map(p => p.id);
-
-      const { error } = await supabase
-        .from('expense_participants')
-        .update({ paid_status: true })
-        .in('id', participantIds);
-
-      if (error) throw error;
+      // Update all participants for this settlement via API wrapper
+      const participantIds = settlement.participants.map(p => p.id || p._id);
+      await settlementsAPI.markAsPaid(participantIds);
 
       toast({
         title: "Success",
         description: "Settlement marked as paid!",
       });
 
-      // No need to fetchSettlements() as we already updated the UI optimistically
-      // But we can do it if we want to be sure
-      // fetchSettlements();
     } catch (error) {
       console.error('Error updating settlement:', error);
       // Rollback on error

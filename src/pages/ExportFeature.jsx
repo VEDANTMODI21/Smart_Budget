@@ -3,7 +3,7 @@ import { Helmet } from 'react-helmet';
 import { motion } from 'framer-motion';
 import { Download, FileText, Share2, Link as LinkIcon } from 'lucide-react';
 import { useAuth } from '@/Contexts/AuthContext';
-import { supabase } from '@/lib/customSupabaseClient';
+import { expensesAPI } from '@/lib/api';
 import Header from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
@@ -20,18 +20,7 @@ const ExportFeature = () => {
 
   const fetchExpenses = async () => {
     try {
-      const { data, error } = await supabase
-        .from('expenses')
-        .select(`
-          *,
-          expense_participants (
-            users (name)
-          )
-        `)
-        .eq('user_id', user.id)
-        .order('date', { ascending: false });
-
-      if (error) throw error;
+      const data = await expensesAPI.getAll();
       setExpenses(data || []);
     } catch (error) {
       console.error('Error fetching expenses:', error);
@@ -56,7 +45,7 @@ const ExportFeature = () => {
       expense.description,
       expense.amount,
       expense.category,
-      expense.expense_participants?.map(p => p.users.name).join(', ') || 'None',
+      expense.expense_participants?.map(p => p.users?.name || 'Unknown').join(', ') || 'None',
     ]);
 
     const csvContent = [
@@ -87,19 +76,7 @@ const ExportFeature = () => {
 
   const generateShareLink = async () => {
     try {
-      // Generate unique share token
-      const shareToken = crypto.randomUUID();
-
-      // Update all user's expenses with share token
-      const { error } = await supabase
-        .from('expenses')
-        .update({
-          share_token: shareToken,
-          share_created_at: new Date().toISOString(),
-        })
-        .eq('user_id', user.id);
-
-      if (error) throw error;
+      const { shareToken } = await expensesAPI.generateShareLink();
 
       const shareUrl = `${window.location.origin}/share/${shareToken}`;
 

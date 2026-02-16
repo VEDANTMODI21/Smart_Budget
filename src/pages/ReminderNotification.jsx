@@ -3,7 +3,7 @@ import { Helmet } from 'react-helmet';
 import { motion } from 'framer-motion';
 import { Send, Bell } from 'lucide-react';
 import { useAuth } from '@/Contexts/AuthContext';
-import { supabase } from '@/lib/customSupabaseClient';
+import { remindersAPI } from '@/lib/api';
 import Header from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
@@ -21,23 +21,10 @@ const ReminderNotification = () => {
 
   const fetchUnsettledDebts = async () => {
     try {
-      const { data, error } = await supabase
-        .from('expense_participants')
-        .select(`
-          *,
-          users!expense_participants_user_id_fkey (name, email),
-          expenses (
-            user_id,
-            description,
-            amount,
-            users!expenses_user_id_fkey (name, email)
-          )
-        `)
-        .eq('paid_status', false)
-        .eq('expenses.user_id', user.id);
-
-      if (error) throw error;
-      setUnsettledDebts(data || []);
+      const data = await remindersAPI.getAll();
+      // Filter for debts owed to the current user
+      const filteredData = data.filter(debt => debt.expenses?.user_id === user.id);
+      setUnsettledDebts(filteredData || []);
     } catch (error) {
       console.error('Error fetching unsettled debts:', error);
       toast({
@@ -51,21 +38,10 @@ const ReminderNotification = () => {
   };
 
   const sendReminder = async (debt) => {
-    setSendingReminder(debt.id);
+    setSendingReminder(debt.id || debt._id);
 
     try {
-      const { data, error } = await supabase.functions.invoke('send-reminder-email', {
-        body: JSON.stringify({
-          debtor_email: debt.users.email,
-          debtor_name: debt.users.name,
-          creditor_email: debt.expenses.users.email,
-          creditor_name: debt.expenses.users.name,
-          amount: debt.amount_owed,
-          expense_description: debt.expenses.description,
-        }),
-      });
-
-      if (error) throw error;
+      await remindersAPI.sendReminder(debt);
 
       toast({
         title: "Success",
@@ -76,7 +52,7 @@ const ReminderNotification = () => {
       toast({
         variant: "destructive",
         title: "Error",
-        description: "Failed to send reminder. Please try again.",
+        description: error.message || "Failed to send reminder. Please try again.",
       });
     } finally {
       setSendingReminder(null);

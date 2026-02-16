@@ -7,6 +7,7 @@ import mongoose from 'mongoose';
 import nodemailer from 'nodemailer';
 import crypto from 'crypto';
 import os from 'os';
+import otpGenerator from 'otp-generator';
 
 dotenv.config();
 
