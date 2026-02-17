@@ -133,3 +133,12 @@ input:-webkit-autofill:active {
   50% { transform: translateY(-20px); }
   100% { transform: translateY(0px); }
 }
+
+::selection {
+  background: rgba(59, 130, 246, 0.3);
+  color: white;
+}
+
+html {
+  scroll-behavior: smooth;
+}

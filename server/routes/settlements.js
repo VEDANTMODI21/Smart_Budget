@@ -96,5 +96,26 @@ router.delete('/:id', authMiddleware, async (req, res) => {
   }
 });
 
+// Bulk update settlements (Mark as paid)
+router.post('/bulk-update', authMiddleware, async (req, res) => {
+  try {
+    const { ids, updates } = req.body;
+
+    if (!ids || !Array.isArray(ids)) {
+      return res.status(400).json({ message: 'IDs array is required' });
+    }
+
+    await Settlement.updateMany(
+      { _id: { $in: ids }, userId: req.userId },
+      { $set: updates }
+    );
+
+    res.json({ message: 'Settlements updated successfully' });
+  } catch (error) {
+    console.error('Bulk update error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
 export default router;
 

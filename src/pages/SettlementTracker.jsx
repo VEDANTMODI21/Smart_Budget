@@ -26,22 +26,22 @@ const SettlementTracker = () => {
       const settlementMap = {};
 
       participants?.forEach((participant) => {
-        const debtorId = participant.user_id;
-        const creditorId = participant.expenses?.user_id;
-        if (!creditorId) return; // Skip if no expense context
+        // Handle both Supabase (participant.user_id) and MongoDB (participant.userId)
+        const debtorId = participant.user_id || participant.userId || 'current';
+        const creditorId = participant.expenses?.user_id || participant.person || 'other';
 
         const key = `${debtorId}-${creditorId}`;
 
         if (!settlementMap[key]) {
           settlementMap[key] = {
-            debtor: participant.users,
-            creditor: participant.expenses.users,
+            debtor: participant.users || { name: user?.name || 'You', id: debtorId },
+            creditor: participant.expenses?.users || { name: participant.person || 'Other', id: creditorId },
             totalAmount: 0,
             participants: [],
           };
         }
 
-        settlementMap[key].totalAmount += parseFloat(participant.amount_owed || 0);
+        settlementMap[key].totalAmount += parseFloat(participant.amount_owed || participant.amount || 0);
         settlementMap[key].participants.push(participant);
       });
 
@@ -107,59 +107,94 @@ const SettlementTracker = () => {
         <Header />
 
         <div className="max-w-7xl mx-auto px-4 py-16 sm:px-6 lg:px-8">
-          <motion.h1
+          <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="text-4xl font-bold text-white mb-8"
+            className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12"
           >
-            Settlement Tracker
-          </motion.h1>
+            <div>
+              <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight leading-none mb-2">
+                Settlement <span className="text-gradient">Tracker</span>
+              </h1>
+              <p className="text-white/40 text-lg font-medium">Clear your debts and manage shared balances.</p>
+            </div>
+          </motion.div>
 
-          <div className="space-y-4">
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={{
+              visible: { transition: { staggerChildren: 0.1 } }
+            }}
+            className="space-y-4"
+          >
             {settlements.length === 0 ? (
               <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="bg-white/10 backdrop-blur-xl rounded-xl p-12 text-center border border-white/20"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                className="glass-card rounded-[2.5rem] p-20 text-center relative overflow-hidden"
               >
-                <CheckCircle className="w-16 h-16 text-green-400 mx-auto mb-4" />
-                <p className="text-white text-lg">All settled up! No pending payments.</p>
+                <div className="relative z-10">
+                  <div className="w-24 h-24 bg-green-500/10 rounded-3xl flex items-center justify-center mx-auto mb-8 animate-float">
+                    <CheckCircle className="w-12 h-12 text-green-400" />
+                  </div>
+                  <h2 className="text-3xl font-black text-white mb-2">You're All Clear!</h2>
+                  <p className="text-white/40 text-lg font-medium">No pending payments found. Great job!</p>
+                </div>
+                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-green-500/5 rounded-full blur-[100px] pointer-events-none" />
               </motion.div>
             ) : (
               settlements.map((settlement, index) => (
                 <motion.div
-                  key={index}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                  className="bg-white/10 backdrop-blur-xl rounded-xl p-6 border border-white/20 hover:shadow-2xl transition-all"
+                  key={`${settlement.debtor.id}-${settlement.creditor.id}`}
+                  variants={{
+                    hidden: { opacity: 0, x: -20 },
+                    visible: { opacity: 1, x: 0 }
+                  }}
+                  whileHover={{ x: 10 }}
+                  className="group glass-card !bg-white/[0.03] hover:!bg-white/[0.08] rounded-3xl p-8 border-transparent hover:border-white/10 transition-all flex flex-col md:flex-row md:items-center justify-between gap-8"
                 >
-                  <div className="flex items-center justify-between">
-                    <div className="flex-1">
-                      <p className="text-xl text-white mb-2">
-                        <span className="font-semibold">{settlement.debtor.name}</span>
-                        {' owes '}
-                        <span className="font-semibold">{settlement.creditor.name}</span>
-                      </p>
-                      <p className="text-3xl font-bold text-white mb-2">
-                        ${settlement.totalAmount.toFixed(2)}
-                      </p>
-                      <p className="text-white/70 text-sm">
-                        {settlement.participants.length} expense{settlement.participants.length !== 1 ? 's' : ''}
+                  <div className="flex-1">
+                    <div className="flex items-center gap-4 mb-4">
+                      <div className="flex -space-x-3">
+                        <div className="w-12 h-12 rounded-2xl bg-blue-500 flex items-center justify-center text-white font-black border-4 border-[#030711] shadow-xl">
+                          {settlement.debtor.name.charAt(0)}
+                        </div>
+                        <div className="w-12 h-12 rounded-2xl bg-purple-500 flex items-center justify-center text-white font-black border-4 border-[#030711] shadow-xl">
+                          {settlement.creditor.name.charAt(0)}
+                        </div>
+                      </div>
+                      <p className="text-lg font-bold text-white/60">
+                        <span className="text-white">{settlement.debtor.name}</span>
+                        {' → '}
+                        <span className="text-white">{settlement.creditor.name}</span>
                       </p>
                     </div>
-                    <button
-                      onClick={() => markAsPaid(settlement)}
-                      className="flex items-center space-x-2 px-6 py-3 bg-green-500 hover:bg-green-600 text-white rounded-lg font-semibold transition-all transform hover:scale-105"
-                    >
-                      <CheckCircle className="w-5 h-5" />
-                      <span>Mark as Paid</span>
-                    </button>
+
+                    <div className="flex items-baseline gap-3">
+                      <span className="text-5xl font-black text-white tracking-tighter">${settlement.totalAmount.toFixed(2)}</span>
+                      <span className="text-white/20 font-black uppercase tracking-widest text-xs">Total Balance</span>
+                    </div>
+
+                    <p className="text-white/30 text-sm font-bold uppercase tracking-widest mt-4 flex items-center gap-2">
+                      <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                      Based on {settlement.participants.length} transactions
+                    </p>
                   </div>
+
+                  <motion.button
+                    whileHover={{ scale: 1.05 }}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => markAsPaid(settlement)}
+                    className="flex items-center justify-center gap-3 px-8 py-5 bg-white text-[#030711] rounded-2xl font-black transition-all shadow-2xl shadow-white/10 hover:bg-blue-50"
+                  >
+                    <CheckCircle className="w-6 h-6" />
+                    <span>MARK AS SETTLED</span>
+                  </motion.button>
                 </motion.div>
               ))
             )}
-          </div>
+          </motion.div>
         </div>
       </div>
     </>
