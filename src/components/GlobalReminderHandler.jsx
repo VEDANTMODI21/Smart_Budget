@@ -49,7 +49,7 @@ const GlobalReminderHandler = () => {
                         });
                     }
 
-                    markNotified(reminder._id);
+                    markNotified(reminder.id);
                 }
             });
         };

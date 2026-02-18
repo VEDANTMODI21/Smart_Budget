@@ -3,7 +3,7 @@ import { Helmet } from 'react-helmet';
 import { motion } from 'framer-motion';
 import { Send, Bell } from 'lucide-react';
 import { useAuth } from '@/Contexts/AuthContext';
-import { remindersAPI } from '@/lib/api';
+import { settlementsAPI, remindersAPI } from '@/lib/api';
 import Header from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
@@ -21,9 +21,16 @@ const ReminderNotification = () => {
 
   const fetchUnsettledDebts = async () => {
     try {
-      const data = await remindersAPI.getAll();
-      // Filter for debts owed to the current user
-      const filteredData = data.filter(debt => debt.expenses?.user_id === user.id);
+      const data = await settlementsAPI.getAll();
+      // Filter for debts owed to the current user (in Supabase mode)
+      // or just all unpaid settlements (in local mode)
+      const filteredData = data.filter(debt => {
+        if (debt.expenses) {
+          return debt.expenses.user_id === user.id;
+        }
+        // Local backend settlements are already filtered by user in the API
+        return !debt.settled;
+      });
       setUnsettledDebts(filteredData || []);
     } catch (error) {
       console.error('Error fetching unsettled debts:', error);
@@ -112,15 +119,15 @@ const ReminderNotification = () => {
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <h3 className="text-xl font-semibold text-white mb-2">
-                        {debt.expenses.description}
+                        {debt.expenses?.description || debt.description || "Expense"}
                       </h3>
                       <p className="text-white/80 mb-2">
-                        <span className="font-semibold">{debt.users.name}</span> owes{' '}
+                        <span className="font-semibold">{debt.users?.name || debt.person}</span> owes{' '}
                         <span className="text-2xl font-bold text-white">
-                          ${parseFloat(debt.amount_owed).toFixed(2)}
+                          ${parseFloat(debt.amount_owed || debt.amount).toFixed(2)}
                         </span>
                       </p>
-                      <p className="text-white/60 text-sm">{debt.users.email}</p>
+                      <p className="text-white/60 text-sm">{debt.users?.email || "No email provided"}</p>
                     </div>
                     <Button
                       onClick={() => sendReminder(debt)}

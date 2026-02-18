@@ -48,6 +48,13 @@ const handleSupabaseError = (error, data) => {
     console.error('Supabase Error:', error);
     throw new Error(error.message || 'Supabase request failed');
   }
+  // Normalize ID (convert _id to id for consistency)
+  if (Array.isArray(data)) {
+    return data.map(item => ({ ...item, id: item.id || item._id }));
+  }
+  if (data && typeof data === 'object') {
+    return { ...data, id: data.id || data._id };
+  }
   return data;
 };
 
@@ -304,18 +311,9 @@ export const remindersAPI = {
   getAll: async () => {
     if (useSupabase) {
       const { data, error } = await supabase
-        .from('expense_participants')
-        .select(`
-          *,
-          users!expense_participants_user_id_fkey (name, email),
-          expenses (
-            user_id,
-            description,
-            amount,
-            users!expenses_user_id_fkey (name, email)
-          )
-        `)
-        .eq('paid_status', false);
+        .from('reminders')
+        .select('*')
+        .order('date', { ascending: true });
       return handleSupabaseError(error, data);
     }
     const res = await fetch(`${API_URL}/api/reminders`, {
@@ -326,8 +324,14 @@ export const remindersAPI = {
 
   create: async (reminder) => {
     if (useSupabase) {
-      // Supabase implementation for create reminder if needed
-      return { error: 'Not implemented in Supabase' };
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+      const { data, error } = await supabase
+        .from('reminders')
+        .insert([{ ...reminder, user_id: user.id }])
+        .select()
+        .single();
+      return handleSupabaseError(error, data);
     }
     const res = await fetch(`${API_URL}/api/reminders`, {
       method: 'POST',
@@ -340,7 +344,7 @@ export const remindersAPI = {
   update: async (id, reminder) => {
     if (useSupabase) {
       const { data, error } = await supabase
-        .from('expense_participants')
+        .from('reminders')
         .update(reminder)
         .eq('id', id)
         .select()
@@ -378,7 +382,14 @@ export const remindersAPI = {
   },
 
   delete: async (id) => {
-    if (useSupabase) return { error: 'Not implemented' };
+    if (useSupabase) {
+      const { error } = await supabase
+        .from('reminders')
+        .delete()
+        .eq('id', id);
+      if (error) throw error;
+      return { success: true };
+    }
     const res = await fetch(`${API_URL}/api/reminders/${id}`, {
       method: 'DELETE',
       headers: getAuthHeaders()

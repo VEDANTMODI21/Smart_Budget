@@ -68,10 +68,10 @@ const Dashboard = () => {
     });
     settlements.forEach(s => uniquePeople.add(s.person));
 
-    const unsettledDebts = settlements.filter(s => !s.settled).length;
+    const unsettledDebts = settlements.filter(s => s.settled === false || s.paid_status === false).length;
     const totalOwed = settlements
-      .filter(s => !s.settled)
-      .reduce((sum, s) => sum + parseFloat(s.amount || 0), 0);
+      .filter(s => s.settled === false || s.paid_status === false)
+      .reduce((sum, s) => sum + parseFloat(s.amount || s.amount_owed || 0), 0);
 
     const activeReminders = reminders
       .filter(reminder => !reminder.notified)
@@ -105,6 +105,7 @@ const Dashboard = () => {
 
     let subscriptionExpenses;
     let subscriptionParticipants;
+    let subscriptionReminders;
 
     const setupRealtime = async () => {
       if (useSupabase && user) {
@@ -123,6 +124,13 @@ const Dashboard = () => {
             fetchAllData(false);
           })
           .subscribe();
+
+        subscriptionReminders = supabase
+          .channel('reminders-changes')
+          .on('postgres_changes', { event: '*', schema: 'public', table: 'reminders' }, () => {
+            fetchAllData(false);
+          })
+          .subscribe();
       }
     };
 
@@ -137,6 +145,7 @@ const Dashboard = () => {
       clearInterval(interval);
       if (subscriptionExpenses) subscriptionExpenses.unsubscribe();
       if (subscriptionParticipants) subscriptionParticipants.unsubscribe();
+      if (subscriptionReminders) subscriptionReminders.unsubscribe();
     };
   }, [fetchAllData, user]);
 
