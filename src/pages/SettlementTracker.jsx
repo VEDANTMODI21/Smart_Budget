@@ -103,20 +103,22 @@ const SettlementTracker = () => {
         <meta name="description" content="Track and manage expense settlements" />
       </Helmet>
 
-      <div className="min-h-screen bg-transparent">
+      <div className="min-h-screen relative">
         <Header />
 
-        <div className="max-w-7xl mx-auto px-4 py-16 sm:px-6 lg:px-8">
+        <div className="max-w-7xl mx-auto px-4 py-20 sm:px-6 lg:px-8">
           <motion.div
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-12"
+            className="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-16"
           >
             <div>
-              <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight leading-none mb-2">
-                Settlement <span className="text-gradient">Tracker</span>
+              <h1 className="text-4xl md:text-5xl font-black text-white tracking-tighter leading-none mb-4 uppercase italic">
+                Settlement <span className="text-gradient">Protocol</span>
               </h1>
-              <p className="text-white/40 text-lg font-medium">Clear your debts and manage shared balances.</p>
+              <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.4em] ml-1">
+                Clearing Financial Obligations • Peer-to-Peer Reconciliation
+              </p>
             </div>
           </motion.div>
 
@@ -126,22 +128,22 @@ const SettlementTracker = () => {
             variants={{
               visible: { transition: { staggerChildren: 0.1 } }
             }}
-            className="space-y-4"
+            className="space-y-6"
           >
             {settlements.length === 0 ? (
               <motion.div
-                initial={{ opacity: 0, scale: 0.9 }}
+                initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className="glass-card rounded-[2.5rem] p-20 text-center relative overflow-hidden"
+                className="glass-card rounded-[3rem] p-24 text-center relative overflow-hidden premium-glow glow-blue"
               >
                 <div className="relative z-10">
-                  <div className="w-24 h-24 bg-green-500/10 rounded-3xl flex items-center justify-center mx-auto mb-8 animate-float">
-                    <CheckCircle className="w-12 h-12 text-green-400" />
+                  <div className="w-24 h-24 bg-emerald-500/10 rounded-3xl flex items-center justify-center mx-auto mb-10 animate-float border border-emerald-500/20">
+                    <CheckCircle className="w-12 h-12 text-emerald-400" />
                   </div>
-                  <h2 className="text-3xl font-black text-white mb-2">You're All Clear!</h2>
-                  <p className="text-white/40 text-lg font-medium">No pending payments found. Great job!</p>
+                  <h2 className="text-3xl font-black text-white mb-3 uppercase tracking-tight italic">Accounts Balanced</h2>
+                  <p className="text-white/20 text-xs font-black uppercase tracking-[0.2em]">Zero outstanding liabilities detected.</p>
                 </div>
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-green-500/5 rounded-full blur-[100px] pointer-events-none" />
+                <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-emerald-500/30 to-transparent" />
               </motion.div>
             ) : (
               settlements.map((settlement, index) => (
@@ -151,45 +153,54 @@ const SettlementTracker = () => {
                     hidden: { opacity: 0, x: -20 },
                     visible: { opacity: 1, x: 0 }
                   }}
-                  whileHover={{ x: 10 }}
-                  className="group glass-card !bg-white/[0.03] hover:!bg-white/[0.08] rounded-3xl p-8 border-transparent hover:border-white/10 transition-all flex flex-col md:flex-row md:items-center justify-between gap-8"
+                  whileHover={{ x: 15 }}
+                  className="group glass-card !bg-white/[0.02] hover:!bg-white/[0.06] rounded-[2.5rem] p-10 border-transparent hover:border-white/10 transition-all flex flex-col lg:flex-row lg:items-center justify-between gap-10 premium-glow glow-purple"
                 >
                   <div className="flex-1">
-                    <div className="flex items-center gap-4 mb-4">
-                      <div className="flex -space-x-3">
-                        <div className="w-12 h-12 rounded-2xl bg-blue-500 flex items-center justify-center text-white font-black border-4 border-[#030711] shadow-xl">
+                    <div className="flex items-center gap-6 mb-8">
+                      <div className="flex -space-x-4">
+                        <div className="w-16 h-16 rounded-2xl bg-blue-600 flex items-center justify-center text-white font-black border-4 border-[#030711] shadow-2xl group-hover:rotate-[-10deg] transition-transform">
                           {settlement.debtor.name.charAt(0)}
                         </div>
-                        <div className="w-12 h-12 rounded-2xl bg-purple-500 flex items-center justify-center text-white font-black border-4 border-[#030711] shadow-xl">
+                        <div className="w-16 h-16 rounded-2xl bg-purple-600 flex items-center justify-center text-white font-black border-4 border-[#030711] shadow-2xl group-hover:rotate-[10deg] transition-transform">
                           {settlement.creditor.name.charAt(0)}
                         </div>
                       </div>
-                      <p className="text-lg font-bold text-white/60">
-                        <span className="text-white">{settlement.debtor.name}</span>
-                        {' → '}
-                        <span className="text-white">{settlement.creditor.name}</span>
-                      </p>
+                      <div>
+                        <p className="text-[10px] font-black text-white/30 uppercase tracking-[0.3em] mb-1">Active Channel</p>
+                        <p className="text-xl font-black text-white uppercase tracking-tight">
+                          {settlement.debtor.name} <span className="text-purple-500">→</span> {settlement.creditor.name}
+                        </p>
+                      </div>
                     </div>
 
-                    <div className="flex items-baseline gap-3">
-                      <span className="text-5xl font-black text-white tracking-tighter">${settlement.totalAmount.toFixed(2)}</span>
-                      <span className="text-white/20 font-black uppercase tracking-widest text-xs">Total Balance</span>
+                    <div className="flex flex-col sm:flex-row sm:items-baseline gap-4">
+                      <span className="text-6xl font-black text-white tracking-tighter group-hover:text-blue-400 transition-colors animate-pulse-slow">
+                        ${settlement.totalAmount.toFixed(2)}
+                      </span>
+                      <span className="text-white/20 font-black uppercase tracking-[0.3em] text-[10px] mb-2 sm:mb-0">
+                        Total Settlement Required
+                      </span>
                     </div>
 
-                    <p className="text-white/30 text-sm font-bold uppercase tracking-widest mt-4 flex items-center gap-2">
-                      <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
-                      Based on {settlement.participants.length} transactions
-                    </p>
+                    <div className="flex items-center gap-4 mt-8 pt-6 border-t border-white/5">
+                      <div className="flex items-center gap-2">
+                        <div className="w-2 h-2 rounded-full bg-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]" />
+                        <span className="text-[10px] text-white/40 font-black uppercase tracking-widest leading-none">
+                          Consolidated from {settlement.participants.length} transactions
+                        </span>
+                      </div>
+                    </div>
                   </div>
 
                   <motion.button
-                    whileHover={{ scale: 1.05 }}
-                    whileTap={{ scale: 0.95 }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                     onClick={() => markAsPaid(settlement)}
-                    className="flex items-center justify-center gap-3 px-8 py-5 bg-white text-[#030711] rounded-2xl font-black transition-all shadow-2xl shadow-white/10 hover:bg-blue-50"
+                    className="flex items-center justify-center gap-4 px-10 py-7 bg-white text-[#030711] rounded-[1.5rem] font-black tracking-[0.2em] text-xs transition-all shadow-2xl shadow-white/5 hover:bg-blue-50 group/btn"
                   >
-                    <CheckCircle className="w-6 h-6" />
-                    <span>MARK AS SETTLED</span>
+                    <CheckCircle className="w-6 h-6 group-btn-hover:scale-110 transition-transform" />
+                    <span>AUTHORIZE SETTLEMENT</span>
                   </motion.button>
                 </motion.div>
               ))
