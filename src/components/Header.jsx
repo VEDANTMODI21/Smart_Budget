@@ -27,38 +27,42 @@ const Header = () => {
   const isActive = (path) => location.pathname === path;
 
   return (
-    <header className="sticky top-0 z-[100] w-full px-4 pt-4">
-      <nav className="max-w-7xl mx-auto glass-morphism rounded-[2rem] px-6 h-20 flex items-center justify-between transition-all duration-500 overflow-hidden">
-        <div className="flex items-center gap-8">
-          <Link to="/dashboard" className="group flex items-center space-x-3">
+    <header className="sticky top-0 z-[100] w-full px-4 pt-6">
+      <nav className="max-w-7xl mx-auto glass-morphism rounded-[2.5rem] px-8 h-24 flex items-center justify-between transition-all duration-500 overflow-hidden relative group">
+        {/* Animated background glow for header */}
+        <div className="absolute inset-0 bg-gradient-to-r from-blue-500/5 via-transparent to-purple-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-1000 -z-10" />
+
+        <div className="flex items-center gap-12">
+          <Link to="/dashboard" className="group flex items-center space-x-4">
             <motion.div
-              whileHover={{ rotate: 180, scale: 1.1 }}
-              className="p-2.5 bg-blue-500 rounded-2xl shadow-lg shadow-blue-500/20"
+              whileHover={{ rotate: 90, scale: 1.1 }}
+              className="p-3 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-2xl shadow-xl shadow-blue-500/20 relative overflow-hidden"
             >
-              <DollarSign className="w-6 h-6 text-white" />
+              <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <DollarSign className="w-6 h-6 text-white relative z-10" />
             </motion.div>
             <div className="flex flex-col">
-              <span className="text-xl font-black text-white tracking-tighter leading-none">SMART</span>
-              <span className="text-[10px] font-black text-blue-400 tracking-[0.2em] leading-none mt-1">BUDGET</span>
+              <span className="text-2xl font-black text-white tracking-tighter leading-none">SMART</span>
+              <span className="text-[10px] font-black text-blue-400 tracking-[0.3em] leading-none mt-1 uppercase">Financial OS</span>
             </div>
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-1">
+          <div className="hidden lg:flex items-center gap-2">
             {navItems.map((item) => (
               <Link
                 key={item.path}
                 to={item.path}
-                className={`relative px-5 py-2 rounded-xl text-sm font-black tracking-wide transition-all duration-300 ${isActive(item.path)
+                className={`relative px-6 py-2.5 rounded-2xl text-[11px] font-black tracking-[0.1em] uppercase transition-all duration-300 ${isActive(item.path)
                   ? 'text-white'
-                  : 'text-white/40 hover:text-white'
+                  : 'text-white/30 hover:text-white hover:bg-white/5'
                   }`}
               >
                 {item.name}
                 {isActive(item.path) && (
                   <motion.div
                     layoutId="nav-active"
-                    className="absolute inset-0 bg-white/10 rounded-xl -z-10"
+                    className="absolute inset-0 bg-white/[0.08] border border-white/10 rounded-2xl -z-10 shadow-xl"
                     transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
                   />
                 )}
@@ -67,17 +71,22 @@ const Header = () => {
           </div>
         </div>
 
-        <div className="hidden md:flex items-center space-x-6">
-          <div className="flex flex-col items-end">
-            <span className="text-[10px] font-black text-white/30 uppercase tracking-widest leading-none mb-1">Authenticated as</span>
-            <span className="text-sm font-black text-white leading-none">{user?.name}</span>
+        <div className="hidden md:flex items-center space-x-8">
+          <div className="flex items-center gap-4 bg-white/[0.03] border border-white/5 px-5 py-2.5 rounded-2xl">
+            <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-blue-500 to-purple-500 flex items-center justify-center text-[10px] font-black text-white shadow-lg shadow-blue-500/10">
+              {user?.name?.charAt(0) || 'U'}
+            </div>
+            <div className="flex flex-col">
+              <span className="text-[11px] font-black text-white tracking-tight leading-none">{user?.name}</span>
+              <span className="text-[9px] font-black text-white/30 uppercase tracking-widest leading-none mt-1">Verified Node</span>
+            </div>
           </div>
           <button
             onClick={handleLogout}
-            className="group flex items-center gap-2 bg-white/5 hover:bg-red-500/20 text-white/60 hover:text-red-400 p-3 rounded-2xl transition-all border border-white/5 hover:border-red-500/20 active:scale-95"
+            className="group flex items-center gap-3 bg-red-500/5 hover:bg-red-500/20 text-red-400 p-4 rounded-2xl transition-all border border-red-500/10 active:scale-95 shadow-lg shadow-red-500/5"
           >
             <LogOut className="w-5 h-5 group-hover:-translate-x-1 transition-transform" />
-            <span className="text-sm font-black">EXIT</span>
+            <span className="text-[10px] font-black tracking-widest uppercase">Terminate</span>
           </button>
         </div>
 

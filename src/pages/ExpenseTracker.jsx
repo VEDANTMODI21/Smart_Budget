@@ -126,7 +126,7 @@ export default function ExpenseTracker() {
 
   const itemVariants = {
     hidden: { y: 20, opacity: 0 },
-    visible: { y: 0, opacity: 1 }
+    visible: { y: 0, opacity: 1, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } }
   };
 
   return (
@@ -143,23 +143,26 @@ export default function ExpenseTracker() {
         animate="visible"
         className="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8 space-y-12"
       >
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <motion.div variants={itemVariants}>
-            <h1 className="text-3xl font-bold text-white tracking-tight">
-              Expense <span className="text-emerald-400">Tracker</span>
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
+          <motion.div variants={itemVariants} className="space-y-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400/80">
+              <Receipt className="w-3 h-3" /> Financial Ledger
+            </div>
+            <h1 className="text-4xl md:text-5xl font-black text-white tracking-tighter leading-none italic uppercase">
+              Expense <span className="text-gradient">Tracker</span>
             </h1>
-            <p className="text-white/40 text-sm font-medium mt-1">Personal spending log and statistics.</p>
+            <p className="text-white/40 text-lg font-medium">Capture your capital movement in real-time.</p>
           </motion.div>
 
-          <motion.div variants={itemVariants} className="bg-emerald-500/10 border border-emerald-500/20 backdrop-blur-xl rounded-[1.5rem] px-6 py-4 flex items-center gap-6">
+          <motion.div variants={itemVariants} className="glass-card premium-glow glow-emerald !bg-emerald-500/5 border-emerald-500/20 rounded-[2.5rem] px-8 py-6 flex items-center gap-8">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-400/60 mb-0.5">Cumulative Spend</p>
-              <p className="text-2xl font-bold text-white tracking-tight">${totalExpense.toFixed(2)}</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400/40 mb-1.5">Network Volume</p>
+              <p className="text-3xl font-black text-white tracking-tighter">${totalExpense.toFixed(2)}</p>
             </div>
-            <div className="w-px h-8 bg-white/10" />
+            <div className="w-px h-10 bg-white/10" />
             <div className="text-right">
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-white/20 mb-0.5">Records</p>
-              <p className="text-xl font-bold text-white tracking-tight">{expenses.length}</p>
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/20 mb-1.5">Nodes Found</p>
+              <p className="text-2xl font-black text-white tracking-tighter">{expenses.length}</p>
             </div>
           </motion.div>
         </div>
@@ -167,132 +170,156 @@ export default function ExpenseTracker() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
           {/* Form Section */}
           <motion.div variants={itemVariants} className="lg:col-span-4">
-            <div className="bg-white/5 backdrop-blur-2xl rounded-[2.5rem] p-10 border border-white/10 sticky top-24">
-              <h2 className="text-2xl font-black text-white mb-8 flex items-center gap-3">
-                <Plus className="w-6 h-6 text-emerald-400" /> New Entry
+            <div className="glass-card rounded-[2.5rem] p-10 border-white/[0.05] sticky top-24 overflow-hidden">
+              <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/5 rounded-full blur-3xl" />
+
+              <h2 className="text-2xl font-black text-white mb-10 flex items-center gap-4 relative z-10">
+                <div className="p-3 bg-emerald-500/20 rounded-2xl border border-emerald-500/20">
+                  <Plus className="w-6 h-6 text-emerald-400" />
+                </div>
+                GENERATE ENTRY
               </h2>
 
-              <form onSubmit={handleAddExpense} className="space-y-6">
-                <div className="space-y-2">
-                  <Label className="text-white/40 text-xs font-bold uppercase tracking-widest ml-1">Title</Label>
+              <form onSubmit={handleAddExpense} className="space-y-8 relative z-10">
+                <div className="space-y-3">
+                  <Label className="text-white/30 text-[10px] font-black uppercase tracking-[0.3em] ml-2">Label Identity</Label>
                   <div className="relative group">
-                    <FileText className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-emerald-400 transition-colors" />
+                    <FileText className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-white/10 group-focus-within:text-emerald-500 transition-colors" />
                     <input
                       name="title"
                       value={formData.title}
                       onChange={handleInputChange}
-                      placeholder="Coffee, Rent, etc."
-                      className="w-full pl-12 pr-4 py-4 bg-white/5 border border-white/10 rounded-2xl text-white outline-none focus:border-emerald-500/50 transition-all font-medium"
+                      placeholder="e.g. CORE SERVER COST"
+                      className="w-full pl-16 pr-6 py-6 glass-input rounded-2xl text-white font-bold placeholder-white/5 focus:outline-none"
                     />
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label className="text-white/40 text-xs font-bold uppercase tracking-widest ml-1">Amount</Label>
+                <div className="grid grid-cols-2 gap-6">
+                  <div className="space-y-3">
+                    <Label className="text-white/30 text-[10px] font-black uppercase tracking-[0.3em] ml-2">Value</Label>
                     <div className="relative group">
-                      <DollarSign className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/20 group-focus-within:text-emerald-400 transition-colors" />
+                      <DollarSign className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-white/10 group-focus-within:text-emerald-400 transition-colors" />
                       <input
                         type="number"
                         name="amount"
                         value={formData.amount}
                         onChange={handleInputChange}
                         placeholder="0.00"
-                        className="w-full pl-12 pr-4 py-4 bg-white/5 border border-white/10 rounded-2xl text-white outline-none focus:border-emerald-500/50 transition-all font-bold"
+                        className="w-full pl-16 pr-6 py-6 glass-input rounded-2xl text-white font-black placeholder-white/5 focus:outline-none"
                       />
                     </div>
                   </div>
-                  <div className="space-y-2">
-                    <Label className="text-white/40 text-xs font-bold uppercase tracking-widest ml-1">Category</Label>
+                  <div className="space-y-3">
+                    <Label className="text-white/30 text-[10px] font-black uppercase tracking-[0.3em] ml-2">Sector</Label>
                     <select
                       name="category"
                       value={formData.category}
                       onChange={handleInputChange}
-                      className="w-full px-4 py-4 bg-white/5 border border-white/10 rounded-2xl text-white outline-none focus:border-emerald-500/50 transition-all font-bold [&>option]:text-gray-900"
+                      className="w-full px-6 py-6 glass-input rounded-2xl text-white font-black focus:outline-none appearance-none cursor-pointer"
                     >
-                      {categories.map(cat => <option key={cat.value} value={cat.value}>{cat.label}</option>)}
+                      {categories.map(cat => (
+                        <option key={cat.value} value={cat.value} className="bg-[#030711] text-white py-4 font-bold">
+                          {cat.label.toUpperCase()}
+                        </option>
+                      ))}
                     </select>
                   </div>
                 </div>
 
-                <div className="space-y-2">
-                  <Label className="text-white/40 text-xs font-bold uppercase tracking-widest ml-1">Date</Label>
-                  <input
-                    type="date"
-                    name="date"
-                    value={formData.date}
-                    onChange={handleInputChange}
-                    className="w-full px-5 py-4 bg-white/5 border border-white/10 rounded-2xl text-white outline-none focus:border-emerald-500/50 transition-all font-medium"
-                  />
+                <div className="space-y-3">
+                  <Label className="text-white/30 text-[10px] font-black uppercase tracking-[0.3em] ml-2">Timestamp</Label>
+                  <div className="relative group">
+                    <Calendar className="absolute left-6 top-1/2 -translate-y-1/2 w-5 h-5 text-white/10 group-focus-within:text-emerald-500 transition-colors" />
+                    <input
+                      type="date"
+                      name="date"
+                      value={formData.date}
+                      onChange={handleInputChange}
+                      className="w-full pl-16 pr-6 py-6 glass-input rounded-2xl text-white font-bold focus:outline-none [color-scheme:dark]"
+                    />
+                  </div>
                 </div>
 
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-black py-5 rounded-[1.5rem] transition-all shadow-xl shadow-emerald-500/20 active:scale-95 flex items-center justify-center gap-2"
+                  className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-8 rounded-[1.5rem] transition-all shadow-2xl shadow-emerald-600/20 active:scale-[0.98] flex items-center justify-center gap-3 text-[11px] tracking-[0.2em]"
                 >
-                  {submitting ? <RefreshCw className="w-6 h-6 animate-spin" /> : 'Add to Ledger'}
+                  {submitting ? (
+                    <RefreshCw className="w-6 h-6 animate-spin text-white" />
+                  ) : (
+                    <>
+                      EXECUTE TRANSACTION <ChevronRight className="w-5 h-5" />
+                    </>
+                  )}
                 </button>
               </form>
             </div>
           </motion.div>
 
           {/* List Section */}
-          <motion.div variants={itemVariants} className="lg:col-span-8 space-y-6">
-            <div className="bg-white/5 backdrop-blur-xl rounded-[2.5rem] border border-white/10 overflow-hidden">
-              <div className="p-10 border-b border-white/5 flex items-center justify-between">
-                <h2 className="text-2xl font-black text-white">History</h2>
-                <LayoutGrid className="w-6 h-6 text-white/20" />
+          <motion.div variants={itemVariants} className="lg:col-span-8 space-y-8">
+            <div className="glass-card rounded-[2.5rem] border-white/[0.05] overflow-hidden min-h-[600px] flex flex-col">
+              <div className="p-10 border-b border-white/[0.05] flex items-center justify-between">
+                <div>
+                  <h2 className="text-2xl font-black text-white">Archives</h2>
+                  <p className="text-white/20 text-[10px] font-black uppercase tracking-[0.2em] mt-1">Historical Data Sync</p>
+                </div>
+                <LayoutGrid className="w-7 h-7 text-white/10" />
               </div>
 
               {loading ? (
-                <div className="p-10 space-y-4">
-                  {Array(4).fill(0).map((_, i) => <Skeleton key={i} className="h-24 w-full rounded-3xl" />)}
+                <div className="p-10 space-y-6 flex-1">
+                  {Array(4).fill(0).map((_, i) => <Skeleton key={i} className="h-28 w-full rounded-[2rem]" />)}
                 </div>
               ) : expenses.length === 0 ? (
-                <div className="p-20 text-center">
-                  <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6">
-                    <Receipt className="w-10 h-10 text-white/10" />
+                <div className="flex-1 flex flex-col items-center justify-center p-20 text-center">
+                  <div className="w-32 h-32 bg-white/5 rounded-[2.5rem] flex items-center justify-center mx-auto mb-10 animate-float border border-white/5">
+                    <Receipt className="w-16 h-16 text-white/5" />
                   </div>
-                  <p className="text-white font-bold opacity-40">Your ledger is empty.</p>
+                  <h3 className="text-white font-black text-xl mb-2 uppercase tracking-tight">System Status: Null</h3>
+                  <p className="text-white/30 text-sm font-medium">No financial nodes detected in local storage.</p>
                 </div>
               ) : (
-                <div className="divide-y divide-white/5 px-4">
-                  <AnimatePresence mode="popLayout">
+                <div className="flex-1 p-6 space-y-4">
+                  <AnimatePresence mode="popLayout text-xs uppercase tracking-widest font-black">
                     {expenses.map((expense) => (
                       <motion.div
                         key={expense.id}
                         layout
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        exit={{ opacity: 0, x: 20 }}
-                        className="p-6 flex items-center justify-between gap-6 group hover:bg-white/[0.02] rounded-3xl transition-all my-2"
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        className="group glass-morphism !bg-white/[0.01] hover:!bg-white/[0.04] rounded-[2rem] p-6 flex items-center justify-between gap-8 transition-all border-transparent hover:border-white/10 cursor-default"
                       >
-                        <div className="flex items-center gap-6 overflow-hidden">
-                          <div className="w-14 h-14 rounded-2xl bg-white/5 flex items-center justify-center text-2xl group-hover:bg-emerald-500/20 transition-colors shadow-inner">
+                        <div className="flex items-center gap-7 min-w-0">
+                          <div className="w-16 h-16 rounded-[1.5rem] glass-morphism flex items-center justify-center text-3xl group-hover:scale-110 group-hover:bg-emerald-500/10 transition-all duration-500 shadow-2xl border border-white/10">
                             {categories.find(c => c.value === expense.category)?.icon || '💰'}
                           </div>
                           <div className="min-w-0">
-                            <h3 className="text-lg font-black text-white truncate group-hover:text-emerald-400 transition-colors uppercase tracking-tighter">
+                            <h3 className="text-xl font-black text-white truncate group-hover:text-emerald-400 transition-colors uppercase tracking-tighter">
                               {expense.title || expense.description}
                             </h3>
-                            <div className="text-[10px] text-white/30 font-bold uppercase tracking-[0.1em] flex items-center gap-2 mt-1">
-                              <span>{expense.category}</span>
+                            <div className="text-[10px] text-white/30 font-black uppercase tracking-[0.2em] flex items-center gap-3 mt-2">
+                              <span className="text-emerald-400/60">{expense.category}</span>
                               <span className="w-1 h-1 rounded-full bg-white/10" />
-                              <span>{new Date(expense.date).toLocaleDateString()}</span>
+                              <span>{new Date(expense.date).toLocaleDateString(undefined, { month: 'long', day: 'numeric', year: 'numeric' })}</span>
                             </div>
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-6">
+                        <div className="flex items-center gap-8 shrink-0">
                           <div className="text-right">
-                            <p className="text-2xl font-black text-white">${parseFloat(expense.amount).toFixed(2)}</p>
+                            <p className="text-3xl font-black text-white tracking-tighter group-hover:scale-110 transition-transform duration-500">
+                              ${parseFloat(expense.amount).toFixed(2)}
+                            </p>
                           </div>
                           <button
                             onClick={() => handleDeleteExpense(expense.id)}
-                            className="p-3 bg-red-500/10 text-red-400 rounded-xl opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500/20"
+                            className="p-4 bg-red-500/5 text-red-500/20 rounded-2xl opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500/10 hover:text-red-500 scale-90 hover:scale-100 active:scale-90"
                           >
-                            <Trash2 className="w-5 h-5" />
+                            <Trash2 className="w-6 h-6" />
                           </button>
                         </div>
                       </motion.div>

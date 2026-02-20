@@ -1,8 +1,9 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
 
 @layer base {
   :root {
@@ -53,23 +54,31 @@
 
 @layer components {
   .glass-card {
-    @apply bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl;
+    @apply bg-white/[0.03] backdrop-blur-xl border border-white/10 shadow-[0_8px_32px_0_rgba(0,0,0,0.37)] transition-all duration-300;
   }
   
   .glass-morphism {
-    @apply bg-white/10 backdrop-blur-2xl border border-white/20 shadow-[0_8px_32px_0_rgba(0,0,0,0.37)];
+    @apply bg-white/[0.08] backdrop-blur-2xl border border-white/20 shadow-[0_8px_40px_rgba(0,0,0,0.4)];
+  }
+
+  .glass-input {
+    @apply bg-white/[0.02] border border-white/5 backdrop-blur-md focus:bg-white/[0.05] focus:border-blue-500/30 focus:shadow-[0_0_20px_rgba(59,130,246,0.1)] transition-all duration-300;
   }
 
   .premium-glow {
-    @apply relative after:absolute after:inset-0 after:-z-10 after:blur-2xl after:opacity-0 hover:after:opacity-100 after:transition-opacity after:duration-500;
+    @apply relative after:absolute after:inset-0 after:-z-10 after:blur-[40px] after:opacity-0 hover:after:opacity-60 after:transition-opacity after:duration-700;
   }
 
   .glow-blue {
-    @apply after:bg-blue-500/20 shadow-blue-500/10;
+    @apply after:bg-blue-500/10 shadow-blue-500/5;
   }
 
   .glow-purple {
-    @apply after:bg-purple-500/20 shadow-purple-500/10;
+    @apply after:bg-purple-500/10 shadow-purple-500/5;
+  }
+
+  .btn-premium {
+    @apply relative overflow-hidden transition-all duration-300 active:scale-95 disabled:opacity-50 disabled:pointer-events-none;
   }
 }
 
@@ -82,7 +91,7 @@
 body {
   font-family: 'Outfit', sans-serif;
   min-height: 100vh;
-  background-color: #030711;
+  background-color: #010409;
   color: white;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
@@ -95,33 +104,33 @@ body {
 
 /* Custom Scrollbar */
 ::-webkit-scrollbar {
-  width: 10px;
+  width: 6px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #030711;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #1e293b;
-  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #334155;
+  background: rgba(255, 255, 255, 0.1);
 }
 
 input:-webkit-autofill,
 input:-webkit-autofill:hover, 
 input:-webkit-autofill:focus, 
 input:-webkit-autofill:active {
-  -webkit-box-shadow: 0 0 0 30px rgba(15, 23, 42, 0.9) inset !important;
+  -webkit-box-shadow: 0 0 0 30px rgba(0, 0, 0, 0.9) inset !important;
   -webkit-text-fill-color: white !important;
   transition: background-color 5000s ease-in-out 0s;
 }
 
 .text-gradient {
-  @apply bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent;
+  @apply bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent;
 }
 
 .animate-float {
@@ -129,16 +138,20 @@ input:-webkit-autofill:active {
 }
 
 @keyframes float {
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-20px); }
-  100% { transform: translateY(0px); }
+  0% { transform: translateY(0px) rotate(0deg); }
+  50% { transform: translateY(-15px) rotate(1deg); }
+  100% { transform: translateY(0px) rotate(0deg); }
 }
 
 ::selection {
-  background: rgba(59, 130, 246, 0.3);
-  color: white;
+  background: rgba(59, 130, 246, 0.2);
+  color: #fff;
 }
 
 html {
   scroll-behavior: smooth;
+}
+
+.mask-fade {
+  mask-image: linear-gradient(to bottom, black 80%, transparent 100%);
 }
