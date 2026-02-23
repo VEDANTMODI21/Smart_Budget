@@ -83,6 +83,17 @@ const Dashboard = () => {
 
     const recentExpenses = [...expenses].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 5);
 
+    // Calculate category distribution for charts
+    const categoryTotals = {};
+    expenses.forEach(exp => {
+      const cat = exp.category || 'Other';
+      categoryTotals[cat] = (categoryTotals[cat] || 0) + parseFloat(exp.amount || 0);
+    });
+
+    const categoriesArray = Object.entries(categoryTotals)
+      .map(([name, value]) => ({ name, value }))
+      .sort((a, b) => b.value - a.value);
+
     return {
       totalExpenses: totalExpenses.toFixed(2),
       totalPeople: uniquePeople.size,
@@ -90,7 +101,8 @@ const Dashboard = () => {
       totalOwed: totalOwed.toFixed(2),
       expenseCount,
       activeReminders,
-      recentExpenses
+      recentExpenses,
+      categoriesArray
     };
   }, [data]);
 
@@ -446,6 +458,62 @@ const Dashboard = () => {
                       </div>
                     </motion.div>
                   ))}
+                </div>
+              )}
+            </div>
+
+            {/* Spending Insights Panel */}
+            <div className="glass-card rounded-[2.5rem] p-8 relative overflow-hidden">
+              <div className="flex items-center gap-3 mb-8 relative z-10">
+                <div className="bg-blue-500/20 p-2.5 rounded-xl border border-blue-500/10">
+                  <TrendingUp className="w-6 h-6 text-blue-400" />
+                </div>
+                <h2 className="text-xl font-black text-white tracking-tight">Spending Insights</h2>
+              </div>
+
+              {loading ? (
+                <div className="space-y-6">
+                  {Array(3).fill(0).map((_, i) => <Skeleton key={i} className="h-12 w-full rounded-xl" />)}
+                </div>
+              ) : stats.categoriesArray.length === 0 ? (
+                <div className="text-center py-10">
+                  <p className="text-white/20 text-sm font-bold uppercase tracking-widest">Insufficient Data</p>
+                </div>
+              ) : (
+                <div className="space-y-6 relative z-10">
+                  {stats.categoriesArray.slice(0, 4).map((cat, index) => {
+                    const percentage = (cat.value / parseFloat(stats.totalExpenses) * 100).toFixed(0);
+                    const colors = [
+                      'bg-blue-500',
+                      'bg-purple-500',
+                      'bg-emerald-500',
+                      'bg-amber-500'
+                    ];
+                    return (
+                      <div key={cat.name} className="space-y-2">
+                        <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest">
+                          <span className="text-white/60">{cat.name}</span>
+                          <span className="text-white">${cat.value.toFixed(0)}</span>
+                        </div>
+                        <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden border border-white/5">
+                          <motion.div
+                            initial={{ width: 0 }}
+                            animate={{ width: `${percentage}%` }}
+                            transition={{ duration: 1, delay: index * 0.1 }}
+                            className={`h-full ${colors[index % colors.length]} relative`}
+                          >
+                            <div className="absolute inset-0 bg-white/20 animate-pulse" />
+                          </motion.div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                  <button
+                    onClick={() => window.location.href = '/expenses'}
+                    className="w-full py-4 text-[10px] font-black text-white/40 hover:text-white transition-colors uppercase tracking-[0.3em] border-t border-white/5 mt-4"
+                  >
+                    View All Analytics
+                  </button>
                 </div>
               )}
             </div>
