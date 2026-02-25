@@ -135,20 +135,25 @@ const ExpenseList = () => {
         variants={containerVariants}
         initial="hidden"
         animate="visible"
-        className="max-w-7xl mx-auto px-4 py-12 sm:px-6 lg:px-8 space-y-8"
+        className="max-w-7xl mx-auto px-4 py-20 sm:px-6 lg:px-8 space-y-12"
       >
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <motion.div variants={itemVariants}>
-            <h1 className="text-5xl font-black text-white tracking-tighter">
-              Expense <span className="text-blue-400">Ledger</span>
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
+          <motion.div variants={itemVariants} className="space-y-4">
+            <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-[10px] font-black uppercase tracking-[0.2em] text-blue-400/80">
+              <Receipt className="w-3 h-3" /> System Archives
+            </div>
+            <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white tracking-tighter leading-none uppercase italic">
+              Expense <span className="text-gradient">Ledger</span>
             </h1>
-            <p className="text-white/40 font-medium mt-2">Track, analyze, and settle your costs.</p>
+            <p className="text-white/40 text-lg font-medium max-w-xl">
+              Comprehensive chronological record of all audited financial movement.
+            </p>
           </motion.div>
 
-          <motion.div variants={itemVariants} className="flex items-center gap-3">
+          <motion.div variants={itemVariants} className="flex items-center gap-4">
             <button
               onClick={() => setIsFilterOpen(!isFilterOpen)}
-              className={`p-3 rounded-2xl border transition-all ${isFilterOpen ? 'bg-blue-500 border-blue-400 text-white' : 'bg-white/5 border-white/10 text-white/60 hover:bg-white/10'}`}
+              className={`p-4 rounded-2xl glass-morphism border transition-all ${isFilterOpen ? 'bg-blue-500 border-blue-400 text-white shadow-lg shadow-blue-500/20' : 'text-white/40 hover:text-white hover:bg-white/5 border-white/10'}`}
             >
               <Filter className="w-6 h-6" />
             </button>
@@ -157,71 +162,71 @@ const ExpenseList = () => {
                 setEditingExpense(null);
                 setShowForm(true);
               }}
-              className="bg-white text-blue-600 hover:bg-blue-50 px-8 py-6 rounded-[1.5rem] font-black text-lg shadow-xl shadow-blue-500/10"
+              className="bg-white text-[#030711] hover:bg-blue-50 px-8 py-7 rounded-2xl font-black text-xs tracking-[0.2em] shadow-2xl shadow-white/10"
             >
-              <Plus className="w-6 h-6 mr-2" />
-              New Expense
+              <Plus className="w-5 h-5 mr-3" />
+              GENERATE ENTRY
             </Button>
           </motion.div>
         </div>
 
-        {/* Action Bar */}
+        {/* Action Bar / Filters */}
         <AnimatePresence>
           {isFilterOpen && (
             <motion.div
-              initial={{ height: 0, opacity: 0 }}
-              animate={{ height: 'auto', opacity: 1 }}
-              exit={{ height: 0, opacity: 0 }}
+              initial={{ height: 0, opacity: 0, y: -20 }}
+              animate={{ height: 'auto', opacity: 1, y: 0 }}
+              exit={{ height: 0, opacity: 0, y: -20 }}
               className="overflow-hidden"
             >
-              <div className="bg-white/5 backdrop-blur-xl rounded-[2rem] p-8 border border-white/10 grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div>
-                  <Label className="text-white/40 text-xs font-bold uppercase mb-2 block">Search</Label>
-                  <div className="relative">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-white/30" />
+              <div className="glass-card rounded-[2.5rem] p-10 border-white/[0.05] grid grid-cols-1 md:grid-cols-4 gap-8 premium-glow glow-blue">
+                <div className="space-y-3">
+                  <Label className="text-white/30 text-[10px] font-black uppercase tracking-[0.3em] ml-2">Search Query</Label>
+                  <div className="relative group">
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-white/10 group-focus-within:text-blue-500 transition-colors" />
                     <input
                       name="search"
                       value={filters.search}
                       onChange={handleFilterChange}
-                      placeholder="Find expense..."
-                      className="w-full pl-10 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white outline-none focus:border-blue-500/50 transition-colors"
+                      placeholder="AUDIT SEARCH..."
+                      className="w-full pl-12 pr-4 py-4 glass-input rounded-xl text-white text-xs font-bold placeholder-white/5 outline-none"
                     />
                   </div>
                 </div>
-                <div>
-                  <Label className="text-white/40 text-xs font-bold uppercase mb-2 block">Category</Label>
+                <div className="space-y-3">
+                  <Label className="text-white/30 text-[10px] font-black uppercase tracking-[0.3em] ml-2">Sector</Label>
                   <select
                     name="category"
                     value={filters.category}
                     onChange={handleFilterChange}
-                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white outline-none focus:border-blue-500/50 transition-colors [&>option]:text-gray-900"
+                    className="w-full px-4 py-4 glass-input rounded-xl text-white text-xs font-bold outline-none cursor-pointer appearance-none"
                   >
-                    <option value="">All Categories</option>
-                    <option value="Food">Food</option>
-                    <option value="Transport">Transport</option>
-                    <option value="Entertainment">Entertainment</option>
-                    <option value="Utilities">Utilities</option>
-                    <option value="Other">Other</option>
+                    <option value="" className="bg-[#030711]">ALL SECTORS</option>
+                    <option value="Food" className="bg-[#030711]">FOOD & DINING</option>
+                    <option value="Transport" className="bg-[#030711]">TRANSPORTATION</option>
+                    <option value="Entertainment" className="bg-[#030711]">ENTERTAINMENT</option>
+                    <option value="Utilities" className="bg-[#030711]">BILLS & UTILITIES</option>
+                    <option value="Other" className="bg-[#030711]">DIVERSE COSTS</option>
                   </select>
                 </div>
-                <div>
-                  <Label className="text-white/40 text-xs font-bold uppercase mb-2 block">From</Label>
+                <div className="space-y-3">
+                  <Label className="text-white/30 text-[10px] font-black uppercase tracking-[0.3em] ml-2">Epoch Start</Label>
                   <input
                     type="date"
                     name="startDate"
                     value={filters.startDate}
                     onChange={handleFilterChange}
-                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white outline-none focus:border-blue-500/50 transition-colors"
+                    className="w-full px-4 py-4 glass-input rounded-xl text-white text-xs font-bold outline-none [color-scheme:dark]"
                   />
                 </div>
-                <div>
-                  <Label className="text-white/40 text-xs font-bold uppercase mb-2 block">To</Label>
+                <div className="space-y-3">
+                  <Label className="text-white/30 text-[10px] font-black uppercase tracking-[0.3em] ml-2">Epoch End</Label>
                   <input
                     type="date"
                     name="endDate"
                     value={filters.endDate}
                     onChange={handleFilterChange}
-                    className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white outline-none focus:border-blue-500/50 transition-colors"
+                    className="w-full px-4 py-4 glass-input rounded-xl text-white text-xs font-bold outline-none [color-scheme:dark]"
                   />
                 </div>
               </div>
@@ -230,75 +235,83 @@ const ExpenseList = () => {
         </AnimatePresence>
 
         {/* Expenses Feed */}
-        <div className="space-y-4">
+        <div className="space-y-6">
           {loading ? (
             Array(5).fill(0).map((_, i) => (
-              <Skeleton key={i} className="h-32 w-full rounded-[2rem]" />
+              <Skeleton key={i} className="h-28 w-full rounded-[2rem]" />
             ))
           ) : expenses.length === 0 ? (
             <motion.div
               variants={itemVariants}
-              className="bg-white/5 backdrop-blur-xl rounded-[2.5rem] p-20 text-center border border-white/10"
+              className="glass-card rounded-[3rem] p-24 text-center border-white/[0.05] relative overflow-hidden"
             >
-              <div className="w-20 h-20 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-6">
-                <Tag className="w-10 h-10 text-white/20" />
+              <div className="relative z-10">
+                <div className="w-24 h-24 bg-white/5 rounded-[2rem] flex items-center justify-center mx-auto mb-8 animate-float border border-white/5">
+                  <Tag className="w-12 h-12 text-white/5" />
+                </div>
+                <h3 className="text-2xl font-black text-white uppercase tracking-tighter">Null Result</h3>
+                <p className="text-white/30 text-xs font-black uppercase tracking-[0.3em] mt-2">No archived nodes match your search parameters.</p>
               </div>
-              <h3 className="text-white font-bold text-xl">No entries found</h3>
-              <p className="text-white/40 mt-2">Try adjusting your filters or add a new expense.</p>
+              <div className="absolute inset-0 bg-blue-500/5 animate-pulse-slow blur-3xl rounded-full" />
             </motion.div>
           ) : (
-            <div className="grid grid-cols-1 gap-4">
+            <div className="grid grid-cols-1 gap-6">
               {expenses.map((expense, index) => (
                 <motion.div
                   key={expense.id}
                   variants={itemVariants}
-                  whileHover={{ scale: 1.01, x: 5 }}
-                  className="group bg-white/5 backdrop-blur-xl rounded-[2rem] p-6 border border-white/5 hover:border-white/20 hover:bg-white/10 transition-all flex flex-col md:flex-row md:items-center justify-between gap-6 cursor-pointer"
+                  whileHover={{ x: 10 }}
+                  className="group relative glass-card !bg-white/[0.01] hover:!bg-white/[0.04] rounded-[2.5rem] p-8 transition-all border-transparent hover:border-white/10 flex flex-col md:flex-row md:items-center justify-between gap-8 cursor-pointer overflow-hidden"
                 >
-                  <div className="flex items-center gap-6">
-                    <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center text-2xl shadow-lg shadow-blue-500/20">
+                  <div className="flex items-center gap-8 relative z-10">
+                    <div className="w-20 h-20 rounded-2xl glass-morphism flex items-center justify-center text-3xl group-hover:scale-110 group-hover:rotate-6 transition-all duration-500 shadow-2xl border border-white/10 shrink-0">
                       {expense.category?.charAt(0) || '💰'}
                     </div>
                     <div>
-                      <div className="flex items-center gap-3 mb-1">
-                        <h3 className="text-xl font-bold text-white group-hover:text-blue-400 transition-colors">
+                      <div className="flex flex-wrap items-center gap-4 mb-2">
+                        <h3 className="text-2xl font-black text-white group-hover:text-blue-400 transition-colors uppercase tracking-tight">
                           {expense.description}
                         </h3>
-                        <span className="px-2 py-0.5 bg-white/10 rounded-md text-[10px] font-black uppercase tracking-widest text-white/60">
+                        <span className="px-3 py-1 bg-blue-500/10 rounded-full text-[9px] font-black uppercase tracking-[0.2em] text-blue-400 border border-blue-500/10">
                           {expense.category}
                         </span>
                       </div>
-                      <div className="flex items-center gap-4 text-white/40 text-sm font-semibold">
-                        <span className="flex items-center gap-1.5"><Calendar className="w-4 h-4" /> {new Date(expense.date).toLocaleDateString()}</span>
+                      <div className="flex items-center gap-6 text-white/30 text-[10px] font-black uppercase tracking-widest">
+                        <span className="flex items-center gap-2"><Calendar className="w-3.5 h-3.5" /> {new Date(expense.date).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' })}</span>
                         {expense.expense_participants?.length > 0 && (
-                          <span className="flex items-center gap-1.5 text-blue-400/60 transition-colors group-hover:text-blue-400">
-                            <Plus className="w-4 h-4" /> {expense.expense_participants.length} Split
+                          <span className="flex items-center gap-2 text-blue-400/60 transition-colors group-hover:text-blue-400">
+                            <Plus className="w-3.5 h-3.5" /> {expense.expense_participants.length} Split Nodes
                           </span>
                         )}
                       </div>
                     </div>
                   </div>
 
-                  <div className="flex items-center justify-between md:justify-end gap-8">
+                  <div className="flex items-center justify-between md:justify-end gap-12 relative z-10">
                     <div className="text-right">
-                      <p className="text-3xl font-black text-white">${parseFloat(expense.amount).toFixed(2)}</p>
-                      <p className="text-[10px] text-white/30 font-bold uppercase tracking-widest">Gross Amount</p>
+                      <p className="text-4xl font-black text-white tracking-tighter group-hover:scale-110 transition-transform duration-500">
+                        ${parseFloat(expense.amount).toFixed(2)}
+                      </p>
+                      <p className="text-[9px] text-white/20 font-black uppercase tracking-[0.3em] mt-1">Audit Value</p>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-3">
                       <button
-                        onClick={() => handleEdit(expense)}
-                        className="p-3 bg-white/5 hover:bg-white/20 rounded-xl transition-all text-white/60 hover:text-white"
+                        onClick={(e) => { e.stopPropagation(); handleEdit(expense); }}
+                        className="p-4 glass-morphism hover:bg-white/10 rounded-2xl transition-all text-white/20 hover:text-white border border-white/5 opacity-0 group-hover:opacity-100"
                       >
                         <Edit className="w-5 h-5" />
                       </button>
                       <button
-                        onClick={() => initiateDelete(expense.id)}
-                        className="p-3 bg-red-500/10 hover:bg-red-500/30 rounded-xl transition-all text-red-400"
+                        onClick={(e) => { e.stopPropagation(); initiateDelete(expense.id); }}
+                        className="p-4 glass-morphism hover:bg-red-500/20 rounded-2xl transition-all text-white/20 hover:text-red-500 border border-white/5 shadow-2xl opacity-0 group-hover:opacity-100"
                       >
                         <Trash2 className="w-5 h-5" />
                       </button>
                     </div>
                   </div>
+
+                  {/* Decorative background element for list items */}
+                  <div className="absolute -right-10 -bottom-10 w-40 h-40 bg-white/5 rounded-full blur-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
                 </motion.div>
               ))}
             </div>

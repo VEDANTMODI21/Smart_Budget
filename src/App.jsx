@@ -19,6 +19,7 @@ import SharedExpenseView from '@/pages/SharedExpenseView';
 import GlobalReminderHandler from '@/components/GlobalReminderHandler';
 import AnimatedBackground from '@/components/AnimatedBackground';
 import CursorGlow from '@/components/CursorGlow';
+import QuickActions from '@/components/QuickActions';
 
 // Loading Component
 const PageLoader = () => (
@@ -110,6 +111,7 @@ function App() {
             <AnimatedBackground />
             <CursorGlow />
             <GlobalReminderHandler />
+            <QuickActions />
             <Suspense fallback={<PageLoader />}>
               <AppRoutes />
             </Suspense>
