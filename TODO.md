@@ -7,3 +7,6 @@
 - [x] Display upcoming reminders with title, date, time, and description
 - [x] Add link to full reminders page
 - [x] Handle loading and error states for reminders
+- [x] Add Monthly Budget feature to Dashboard
+- [x] Implement Budget Editing functionality
+- [x] Add backend support for monthly budget storage

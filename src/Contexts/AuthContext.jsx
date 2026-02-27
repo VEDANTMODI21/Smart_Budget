@@ -221,6 +221,37 @@ export const AuthProvider = ({ children }) => {
     }
   }, [toast]);
 
+  // Update Profile
+  const updateProfile = useCallback(async (profile) => {
+    try {
+      if (useSupabase) {
+        const { data, error } = await supabase.auth.updateUser({
+          data: profile
+        });
+        if (error) throw error;
+        setUser(prev => ({ ...prev, ...data.user }));
+      } else {
+        const res = await fetch(`${API_URL}/api/auth/profile`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${localStorage.getItem('token')}`
+          },
+          body: JSON.stringify(profile)
+        });
+        const data = await res.json();
+        if (!res.ok) throw new Error(data.message || 'Update failed');
+        setUser(data.user);
+      }
+      toast({ title: "Success", description: "Profile updated successfully!" });
+      return { success: true };
+    } catch (error) {
+      console.error("Update profile error:", error);
+      toast({ variant: "destructive", title: "Update Failed", description: error.message });
+      throw error;
+    }
+  }, [toast]);
+
   const value = useMemo(() => ({
     user: user ? { ...user, name: user.name || user.user_metadata?.full_name || user.email } : null,
     session,
@@ -230,10 +261,11 @@ export const AuthProvider = ({ children }) => {
     generateOTP,
     loginWithOTP,
     logout,
+    updateProfile,
     signUp: signup,
     signIn: login,
     signOut: logout,
-  }), [user, session, loading, signup, login, generateOTP, loginWithOTP, logout]);
+  }), [user, session, loading, signup, login, generateOTP, loginWithOTP, logout, updateProfile]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

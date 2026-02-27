@@ -318,13 +318,43 @@ router.get('/me', authMiddleware, async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-    res.json({
-      id: user._id,
+    id: user._id,
       name: user.name,
-      email: user.email
+        email: user.email,
+          monthlyBudget: user.monthlyBudget || 0
+  });
+  } catch (error) {
+  console.error('Get user error:', error);
+  res.status(500).json({ message: 'Server error', error: error.message });
+}
+});
+
+// Update user profile
+router.put('/profile', authMiddleware, async (req, res) => {
+  try {
+    const { name, monthlyBudget } = req.body;
+
+    const user = await User.findById(req.userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    if (name) user.name = name;
+    if (monthlyBudget !== undefined) user.monthlyBudget = monthlyBudget;
+
+    await user.save();
+
+    res.json({
+      message: 'Profile updated successfully',
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        monthlyBudget: user.monthlyBudget
+      }
     });
   } catch (error) {
-    console.error('Get user error:', error);
+    console.error('Update profile error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });

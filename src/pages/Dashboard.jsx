@@ -1,14 +1,14 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { Helmet } from 'react-helmet';
 import { motion, AnimatePresence } from 'framer-motion';
-import { DollarSign, Users, AlertCircle, TrendingUp, RefreshCw, Bell, Calendar, Receipt, ArrowUpRight, ArrowDownRight, MoreHorizontal, Plus } from 'lucide-react';
+import { DollarSign, Users, AlertCircle, TrendingUp, RefreshCw, Bell, Calendar, Receipt, ArrowUpRight, ArrowDownRight, MoreHorizontal, Plus, Edit3, Target } from 'lucide-react';
 import { useAuth } from '@/Contexts/AuthContext';
 import { expensesAPI, settlementsAPI, remindersAPI } from '@/lib/api';
 import Header from '@/components/Header';
 import Skeleton from '@/components/ui/Skeleton';
 
 const Dashboard = () => {
-  const { user } = useAuth();
+  const { user, updateProfile } = useAuth();
   const [data, setData] = useState({
     expenses: [],
     settlements: [],
@@ -16,6 +16,8 @@ const Dashboard = () => {
   });
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
+  const [isEditingBudget, setIsEditingBudget] = useState(false);
+  const [newBudget, setNewBudget] = useState(user?.monthlyBudget || 0);
   const [lastUpdated, setLastUpdated] = useState(new Date());
   const isFetchingRef = React.useRef(false);
 
@@ -105,6 +107,37 @@ const Dashboard = () => {
       categoriesArray
     };
   }, [data]);
+
+  // Handle budget update
+  const handleUpdateBudget = async () => {
+    try {
+      await updateProfile({ monthlyBudget: parseFloat(newBudget) });
+      setIsEditingBudget(false);
+    } catch (error) {
+      console.error('Error updating budget:', error);
+    }
+  };
+
+  const monthlyStats = useMemo(() => {
+    const now = new Date();
+    const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    const spentThisMonth = data.expenses
+      .filter(exp => new Date(exp.date) >= startOfMonth)
+      .reduce((sum, exp) => sum + parseFloat(exp.amount || 0), 0);
+
+    const budget = user?.monthlyBudget || 0;
+    const remaining = budget - spentThisMonth;
+    const percentage = budget > 0 ? Math.min((spentThisMonth / budget) * 100, 100) : 0;
+
+    return {
+      spentThisMonth: spentThisMonth.toFixed(2),
+      budget: budget.toFixed(2),
+      remaining: remaining.toFixed(2),
+      percentage,
+      isOverBudget: spentThisMonth > budget && budget > 0
+    };
+  }, [data.expenses, user?.monthlyBudget]);
 
   // Initial load
   useEffect(() => {
@@ -277,6 +310,96 @@ const Dashboard = () => {
             </motion.button>
           </motion.div>
         </div>
+
+        {/* Monthly Budget Overview */}
+        <motion.div variants={itemVariants} className="relative">
+          <div className="glass-card rounded-[2.5rem] p-8 md:p-10 overflow-hidden relative group">
+            <div className="absolute inset-0 bg-gradient-to-br from-indigo-500/10 via-transparent to-emerald-500/10 opacity-50 group-hover:opacity-100 transition-opacity duration-1000" />
+
+            <div className="relative z-10 flex flex-col md:flex-row gap-10 items-center">
+              <div className="w-full md:w-1/3 space-y-4">
+                <div className="flex items-center gap-3">
+                  <div className="bg-indigo-500/20 p-2.5 rounded-xl border border-indigo-500/20">
+                    <Target className="w-6 h-6 text-indigo-400" />
+                  </div>
+                  <h2 className="text-xl font-black text-white uppercase tracking-tighter italic">Monthly Budget</h2>
+                </div>
+
+                <div className="space-y-1">
+                  {isEditingBudget ? (
+                    <div className="flex items-center gap-3">
+                      <input
+                        type="number"
+                        value={newBudget}
+                        onChange={(e) => setNewBudget(e.target.value)}
+                        className="bg-white/5 border border-white/10 rounded-xl px-4 py-2 w-32 text-white font-black text-2xl focus:outline-none focus:border-indigo-500"
+                      />
+                      <button
+                        onClick={handleUpdateBudget}
+                        className="bg-indigo-500 text-white p-2 rounded-xl hover:bg-indigo-400 transition-colors"
+                      >
+                        Save
+                      </button>
+                      <button
+                        onClick={() => setIsEditingBudget(false)}
+                        className="text-white/40 hover:text-white"
+                      >
+                        Cancel
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="flex items-baseline gap-3 group">
+                      <span className="text-5xl font-black text-white tracking-tighter">${monthlyStats.budget}</span>
+                      <button
+                        onClick={() => setIsEditingBudget(true)}
+                        className="opacity-0 group-hover:opacity-100 transition-opacity p-2 hover:bg-white/5 rounded-lg"
+                      >
+                        <Edit3 className="w-4 h-4 text-white/40" />
+                      </button>
+                    </div>
+                  )}
+                  <p className="text-white/30 text-[10px] font-black uppercase tracking-[0.3em]">Allocated Resources</p>
+                </div>
+              </div>
+
+              <div className="w-px h-24 bg-white/5 hidden md:block" />
+
+              <div className="w-full md:flex-1 space-y-6">
+                <div className="flex justify-between items-end">
+                  <div className="space-y-1">
+                    <p className="text-white/30 text-[10px] font-black uppercase tracking-[0.2em]">Spent So Far</p>
+                    <p className={`text-4xl font-black tracking-tighter ${monthlyStats.isOverBudget ? 'text-red-400' : 'text-white'}`}>
+                      ${monthlyStats.spentThisMonth}
+                    </p>
+                  </div>
+                  <div className="text-right space-y-1">
+                    <p className="text-white/30 text-[10px] font-black uppercase tracking-[0.2em]">Available Balance</p>
+                    <p className={`text-2xl font-black tracking-tighter ${monthlyStats.isOverBudget ? 'text-red-500' : 'text-emerald-400'}`}>
+                      {monthlyStats.isOverBudget ? '-' : ''}${Math.abs(monthlyStats.remaining)}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-3">
+                  <div className="h-4 w-full bg-white/5 rounded-full overflow-hidden border border-white/5 relative">
+                    <motion.div
+                      initial={{ width: 0 }}
+                      animate={{ width: `${monthlyStats.percentage}%` }}
+                      transition={{ duration: 1.5, ease: "easeOut" }}
+                      className={`h-full relative ${monthlyStats.isOverBudget ? 'bg-red-500' : 'bg-gradient-to-r from-indigo-500 to-emerald-500'}`}
+                    >
+                      <div className="absolute inset-0 bg-white/20 animate-pulse" />
+                    </motion.div>
+                  </div>
+                  <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest">
+                    <span className="text-white/40">Utilization Status</span>
+                    <span className={`${monthlyStats.isOverBudget ? 'text-red-400' : 'text-indigo-400'}`}>{monthlyStats.percentage.toFixed(0)}% Consumed</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </motion.div>
 
         {/* Stats Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">

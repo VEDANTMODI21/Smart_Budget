@@ -70,6 +70,21 @@ export const authAPI = {
     });
     return handleResponse(res);
   },
+
+  updateProfile: async (profile) => {
+    if (useSupabase) {
+      const { data, error } = await supabase.auth.updateUser({
+        data: profile
+      });
+      return handleSupabaseError(error, data);
+    }
+    const res = await fetch(`${API_URL}/api/auth/profile`, {
+      method: 'PUT',
+      headers: getAuthHeaders(),
+      body: JSON.stringify(profile)
+    });
+    return handleResponse(res);
+  },
 };
 
 // Expenses API

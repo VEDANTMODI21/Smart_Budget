@@ -31,6 +31,7 @@ const userSchema = new mongoose.Schema({
   fullName: String,
   email: { type: String, unique: true },
   password: String,
+  monthlyBudget: { type: Number, default: 0 },
   createdAt: { type: Date, default: Date.now }
 });
 
