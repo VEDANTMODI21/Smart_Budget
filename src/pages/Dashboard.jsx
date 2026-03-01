@@ -6,6 +6,8 @@ import { useAuth } from '@/Contexts/AuthContext';
 import { expensesAPI, settlementsAPI, remindersAPI } from '@/lib/api';
 import Header from '@/components/Header';
 import Skeleton from '@/components/ui/Skeleton';
+import Counter from '@/components/animations/Counter';
+import SplitText from '@/components/animations/SplitText';
 
 const Dashboard = () => {
   const { user, updateProfile } = useAuth();
@@ -209,11 +211,18 @@ const Dashboard = () => {
   };
 
   const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
+    hidden: { y: 30, opacity: 0, scale: 0.95, rotateX: -10 },
     visible: {
       y: 0,
       opacity: 1,
-      transition: { duration: 0.5, ease: "easeOut" }
+      scale: 1,
+      rotateX: 0,
+      transition: {
+        type: "spring",
+        damping: 20,
+        stiffness: 100,
+        duration: 0.8
+      }
     }
   };
 
@@ -280,14 +289,21 @@ const Dashboard = () => {
       >
         {/* Welcome Section */}
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-          <motion.div variants={itemVariants} className="space-y-2">
+          <motion.div variants={itemVariants} className="space-y-4">
             <h1 className="text-4xl md:text-5xl font-black text-white tracking-tight leading-none">
-              Welcome back, <br />
+              <SplitText text="Welcome back," delay={0.2} className="block" />
               <span className="text-gradient">
-                {user?.name?.split(' ')[0]}!
+                <SplitText text={user?.name?.split(' ')[0] + '!'} delay={0.5} />
               </span>
             </h1>
-            <p className="text-white/40 text-lg font-medium">Your financial overview is looking sharp today.</p>
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1 }}
+              className="text-white/40 text-lg font-medium"
+            >
+              Your financial overview is looking sharp today.
+            </motion.p>
           </motion.div>
 
           <motion.div variants={itemVariants} className="flex items-center gap-4">
@@ -349,7 +365,11 @@ const Dashboard = () => {
                     </div>
                   ) : (
                     <div className="flex items-baseline gap-3 group">
-                      <span className="text-5xl font-black text-white tracking-tighter">${monthlyStats.budget}</span>
+                      <Counter
+                        value={parseFloat(monthlyStats.budget)}
+                        prefix="$"
+                        className="text-5xl font-black text-white tracking-tighter"
+                      />
                       <button
                         onClick={() => setIsEditingBudget(true)}
                         className="opacity-0 group-hover:opacity-100 transition-opacity p-2 hover:bg-white/5 rounded-lg"
@@ -369,13 +389,14 @@ const Dashboard = () => {
                   <div className="space-y-1">
                     <p className="text-white/30 text-[10px] font-black uppercase tracking-[0.2em]">Spent So Far</p>
                     <p className={`text-4xl font-black tracking-tighter ${monthlyStats.isOverBudget ? 'text-red-400' : 'text-white'}`}>
-                      ${monthlyStats.spentThisMonth}
+                      <Counter value={parseFloat(monthlyStats.spentThisMonth)} prefix="$" />
                     </p>
                   </div>
                   <div className="text-right space-y-1">
                     <p className="text-white/30 text-[10px] font-black uppercase tracking-[0.2em]">Available Balance</p>
                     <p className={`text-2xl font-black tracking-tighter ${monthlyStats.isOverBudget ? 'text-red-500' : 'text-emerald-400'}`}>
-                      {monthlyStats.isOverBudget ? '-' : ''}${Math.abs(monthlyStats.remaining)}
+                      {monthlyStats.isOverBudget ? '-' : ''}
+                      <Counter value={Math.abs(monthlyStats.remaining)} prefix="$" />
                     </p>
                   </div>
                 </div>
@@ -413,7 +434,7 @@ const Dashboard = () => {
                 key={card.title}
                 variants={itemVariants}
                 whileHover={{ y: -8, scale: 1.02 }}
-                className={`group relative glass-card p-6 rounded-[2rem] overflow-hidden premium-glow ${index % 2 === 0 ? 'glow-blue' : 'glow-purple'}`}
+                className={`group relative glass-card p-6 rounded-[2rem] overflow-hidden premium-glow hover-lift premium-shine ${index % 2 === 0 ? 'glow-blue' : 'glow-purple'}`}
               >
                 <div className="relative z-10 flex flex-col h-full justify-between">
                   <div className="flex items-start justify-between">
@@ -431,7 +452,12 @@ const Dashboard = () => {
                   <div className="mt-8">
                     <h3 className="text-white/40 text-[10px] font-black uppercase tracking-[0.2em] mb-1">{card.title}</h3>
                     <div className="flex items-baseline gap-2">
-                      <span className="text-3xl font-black text-white tracking-tighter">{card.value}</span>
+                      <Counter
+                        value={typeof card.value === 'string' ? parseFloat(card.value.replace('$', '')) : card.value}
+                        prefix={typeof card.value === 'string' && card.value.startsWith('$') ? '$' : ''}
+                        precision={typeof card.value === 'string' && card.value.includes('.') ? 2 : 0}
+                        className="text-3xl font-black text-white tracking-tighter"
+                      />
                     </div>
                     <p className="text-xs text-white/20 font-bold mt-1">{card.subtitle}</p>
                   </div>

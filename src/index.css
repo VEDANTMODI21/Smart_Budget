@@ -80,6 +80,32 @@
   .btn-premium {
     @apply relative overflow-hidden transition-all duration-300 active:scale-95 disabled:opacity-50 disabled:pointer-events-none;
   }
+
+  .premium-shine {
+    @apply relative overflow-hidden;
+  }
+
+  .premium-shine::after {
+    content: '';
+    @apply absolute top-0 -left-[100%] w-1/2 h-full bg-gradient-to-r from-transparent via-white/10 to-transparent skew-x-[-25deg] pointer-events-none;
+  }
+
+  .premium-shine:hover::after {
+    @apply left-[150%] transition-[left] duration-[1200ms] ease-out;
+  }
+
+  .hover-lift {
+    @apply transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] hover:-translate-y-2 hover:shadow-[0_20px_40px_-15px_rgba(0,0,0,0.5)] hover:bg-white/[0.04];
+  }
+
+  .glow-border {
+    @apply relative border border-white/5;
+  }
+
+  .glow-border::before {
+    content: '';
+    @apply absolute inset-0 rounded-[inherit] border border-white/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500;
+  }
 }
 
 * {

@@ -28,6 +28,17 @@ const PageLoader = () => (
   </div>
 );
 
+const PageTransition = ({ children }) => (
+  <motion.div
+    initial={{ opacity: 0, y: 20, scale: 0.98 }}
+    animate={{ opacity: 1, y: 0, scale: 1 }}
+    exit={{ opacity: 0, y: -20, scale: 0.98 }}
+    transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
+  >
+    {children}
+  </motion.div>
+);
+
 const AppRoutes = () => {
   const location = useLocation();
 
@@ -37,17 +48,17 @@ const AppRoutes = () => {
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
 
         {/* Auth Routes */}
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/signup" element={<SignupPage />} />
-        <Route path="/otp-login" element={<OtpLoginPage />} />
-        <Route path="/otp-signup" element={<OtpSignupPage />} />
+        <Route path="/login" element={<PageTransition><LoginPage /></PageTransition>} />
+        <Route path="/signup" element={<PageTransition><SignupPage /></PageTransition>} />
+        <Route path="/otp-login" element={<PageTransition><OtpLoginPage /></PageTransition>} />
+        <Route path="/otp-signup" element={<PageTransition><OtpSignupPage /></PageTransition>} />
 
         {/* Protected Routes */}
         <Route
           path="/dashboard"
           element={
             <ProtectedRoute>
-              <Dashboard />
+              <PageTransition><Dashboard /></PageTransition>
             </ProtectedRoute>
           }
         />
@@ -55,7 +66,7 @@ const AppRoutes = () => {
           path="/expenses"
           element={
             <ProtectedRoute>
-              <ExpenseList />
+              <PageTransition><ExpenseList /></PageTransition>
             </ProtectedRoute>
           }
         />
@@ -63,7 +74,7 @@ const AppRoutes = () => {
           path="/expenses-tracker"
           element={
             <ProtectedRoute>
-              <ExpenseTracker />
+              <PageTransition><ExpenseTracker /></PageTransition>
             </ProtectedRoute>
           }
         />
@@ -71,7 +82,7 @@ const AppRoutes = () => {
           path="/settlements"
           element={
             <ProtectedRoute>
-              <SettlementTracker />
+              <PageTransition><SettlementTracker /></PageTransition>
             </ProtectedRoute>
           }
         />
@@ -79,7 +90,7 @@ const AppRoutes = () => {
           path="/reminders"
           element={
             <ProtectedRoute>
-              <ReminderNotification />
+              <PageTransition><ReminderNotification /></PageTransition>
             </ProtectedRoute>
           }
         />
@@ -87,13 +98,13 @@ const AppRoutes = () => {
           path="/export"
           element={
             <ProtectedRoute>
-              <ExportFeature />
+              <PageTransition><ExportFeature /></PageTransition>
             </ProtectedRoute>
           }
         />
 
         {/* Public Share Route */}
-        <Route path="/share/:token" element={<SharedExpenseView />} />
+        <Route path="/share/:token" element={<PageTransition><SharedExpenseView /></PageTransition>} />
 
         {/* 404 Redirect */}
         <Route path="*" element={<Navigate to="/dashboard" replace />} />

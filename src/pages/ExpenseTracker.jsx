@@ -5,8 +5,9 @@ import { useAuth } from '@/Contexts/AuthContext';
 import { expensesAPI } from '@/lib/api';
 import Header from '@/components/Header';
 import { Helmet } from 'react-helmet';
-import Skeleton from '@/components/ui/Skeleton';
 import { Label } from '@/components/ui/label';
+import Counter from '@/components/animations/Counter';
+import SplitText from '@/components/animations/SplitText';
 
 export default function ExpenseTracker() {
   const { user } = useAuth();
@@ -125,8 +126,19 @@ export default function ExpenseTracker() {
   };
 
   const itemVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: { y: 0, opacity: 1, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } }
+    hidden: { y: 30, opacity: 0, scale: 0.95, rotateX: -10 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      scale: 1,
+      rotateX: 0,
+      transition: {
+        type: "spring",
+        damping: 20,
+        stiffness: 100,
+        duration: 0.8
+      }
+    }
   };
 
   return (
@@ -149,20 +161,27 @@ export default function ExpenseTracker() {
               <Receipt className="w-3 h-3" /> Financial Ledger
             </div>
             <h1 className="text-4xl md:text-5xl font-black text-white tracking-tighter leading-none italic uppercase">
-              Expense <span className="text-gradient">Tracker</span>
+              <SplitText text="Expense " delay={0.2} /> <span className="text-gradient"><SplitText text="Tracker" delay={0.4} /></span>
             </h1>
-            <p className="text-white/40 text-lg font-medium">Capture your capital movement in real-time.</p>
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.8 }}
+              className="text-white/40 text-lg font-medium"
+            >
+              Capture your capital movement in real-time.
+            </motion.p>
           </motion.div>
 
-          <motion.div variants={itemVariants} className="glass-card premium-glow glow-emerald !bg-emerald-500/5 border-emerald-500/20 rounded-[2.5rem] px-8 py-6 flex items-center gap-8">
+          <motion.div variants={itemVariants} className="glass-card premium-glow glow-emerald !bg-emerald-500/5 border-emerald-500/20 rounded-[2.5rem] px-8 py-6 flex items-center gap-8 hover-lift premium-shine">
             <div>
               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-400/40 mb-1.5">Network Volume</p>
-              <p className="text-3xl font-black text-white tracking-tighter">${totalExpense.toFixed(2)}</p>
+              <Counter value={totalExpense} prefix="$" className="text-3xl font-black text-white tracking-tighter" />
             </div>
             <div className="w-px h-10 bg-white/10" />
             <div className="text-right">
               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/20 mb-1.5">Nodes Found</p>
-              <p className="text-2xl font-black text-white tracking-tighter">{expenses.length}</p>
+              <Counter value={expenses.length} precision={0} className="text-2xl font-black text-white tracking-tighter" />
             </div>
           </motion.div>
         </div>
@@ -244,7 +263,7 @@ export default function ExpenseTracker() {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-8 rounded-[1.5rem] transition-all shadow-2xl shadow-emerald-600/20 active:scale-[0.98] flex items-center justify-center gap-3 text-[11px] tracking-[0.2em]"
+                  className="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-8 rounded-[1.5rem] transition-all shadow-2xl shadow-emerald-600/20 active:scale-[0.98] flex items-center justify-center gap-3 text-[11px] tracking-[0.2em] premium-shine"
                 >
                   {submitting ? (
                     <RefreshCw className="w-6 h-6 animate-spin text-white" />
@@ -288,10 +307,10 @@ export default function ExpenseTracker() {
                       <motion.div
                         key={expense.id}
                         layout
-                        initial={{ opacity: 0, scale: 0.95 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.95 }}
-                        className="group glass-morphism !bg-white/[0.01] hover:!bg-white/[0.04] rounded-[2rem] p-6 flex items-center justify-between gap-8 transition-all border-transparent hover:border-white/10 cursor-default"
+                        initial={{ opacity: 0, y: 20, scale: 0.95 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95, transition: { duration: 0.2 } }}
+                        className="group glass-morphism !bg-white/[0.01] hover:!bg-white/[0.04] rounded-[2rem] p-6 flex items-center justify-between gap-8 transition-all border-transparent hover:border-white/10 cursor-default hover-lift premium-shine"
                       >
                         <div className="flex items-center gap-7 min-w-0">
                           <div className="w-16 h-16 rounded-[1.5rem] glass-morphism flex items-center justify-center text-3xl group-hover:scale-110 group-hover:bg-emerald-500/10 transition-all duration-500 shadow-2xl border border-white/10">

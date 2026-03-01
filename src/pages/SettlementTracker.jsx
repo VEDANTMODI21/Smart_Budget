@@ -6,6 +6,9 @@ import { useAuth } from '@/Contexts/AuthContext';
 import { settlementsAPI } from '@/lib/api';
 import Header from '@/components/Header';
 import { useToast } from '@/components/ui/use-toast';
+import Counter from '@/components/animations/Counter';
+import SplitText from '@/components/animations/SplitText';
+import { RefreshCw, DollarSign } from 'lucide-react';
 
 const SettlementTracker = () => {
   const { user } = useAuth();
@@ -111,33 +114,53 @@ const SettlementTracker = () => {
 
       <div className="max-w-7xl mx-auto px-4 py-20 sm:px-6 lg:px-8 relative z-10">
         <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          initial="hidden"
+          animate="visible"
+          variants={{
+            hidden: { opacity: 0 },
+            visible: { transition: { staggerChildren: 0.1 } }
+          }}
           className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-20"
         >
-          <div className="space-y-4">
+          <motion.div
+            variants={{
+              hidden: { y: 30, opacity: 0, scale: 0.95, rotateX: -10 },
+              visible: { y: 0, opacity: 1, scale: 1, rotateX: 0, transition: { type: "spring", damping: 20, stiffness: 100, duration: 0.8 } }
+            }}
+            className="space-y-4"
+          >
             <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-[10px] font-black uppercase tracking-[0.2em] text-blue-400/80">
               <RefreshCw className="w-3 h-3" /> P2P Reconciliation
             </div>
             <h1 className="text-4xl md:text-5xl lg:text-6xl font-black text-white tracking-tighter leading-none uppercase italic">
-              Settlement <span className="text-gradient">Protocol</span>
+              <SplitText text="Settlement " delay={0.2} /> <span className="text-gradient"><SplitText text="Protocol" delay={0.4} /></span>
             </h1>
-            <p className="text-white/40 text-lg font-medium max-w-xl">
+            <motion.p
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 1 }}
+              className="text-white/40 text-lg font-medium max-w-xl"
+            >
               Consolidated debt resolution and financial clearing between network participants.
-            </p>
-          </div>
+            </motion.p>
+          </motion.div>
 
-          <div className="glass-card !bg-white/[0.03] border-white/[0.05] rounded-3xl p-6 px-8 flex items-center gap-6">
+          <motion.div
+            variants={{
+              hidden: { y: 30, opacity: 0, scale: 0.95 },
+              visible: { y: 0, opacity: 1, scale: 1, transition: { type: "spring", damping: 20, stiffness: 100, duration: 0.8, delay: 0.2 } }
+            }}
+            className="glass-card !bg-white/[0.03] border-white/[0.05] rounded-3xl p-6 px-8 flex items-center gap-6 hover-lift premium-shine"
+          >
             <div className="text-right">
               <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white/20 mb-1">Active Claims</p>
-              <p className="text-2xl font-black text-white tracking-tighter leading-none">{settlements.length}</p>
+              <Counter value={settlements.length} precision={0} className="text-2xl font-black text-white tracking-tighter leading-none" />
             </div>
             <div className="w-px h-8 bg-white/10" />
             <div className="bg-blue-500/20 p-3 rounded-2xl border border-blue-500/20">
               <DollarSign className="w-6 h-6 text-blue-400" />
             </div>
-          </div>
+          </motion.div>
         </motion.div>
 
         <motion.div
@@ -173,11 +196,11 @@ const SettlementTracker = () => {
               <motion.div
                 key={`${settlement.debtor.id}-${settlement.creditor.id}`}
                 variants={{
-                  hidden: { opacity: 0, y: 20 },
-                  visible: { opacity: 1, y: 0, transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] } }
+                  hidden: { opacity: 0, y: 30, scale: 0.95, rotateX: -5 },
+                  visible: { opacity: 1, y: 0, scale: 1, rotateX: 0, transition: { duration: 0.8, ease: [0.16, 1, 0.3, 1] } }
                 }}
                 whileHover={{ y: -5 }}
-                className="group glass-card !bg-white/[0.02] hover:!bg-white/[0.04] rounded-[3rem] p-10 md:p-12 border-white/[0.03] hover:border-white/10 transition-all flex flex-col lg:flex-row lg:items-center justify-between gap-12 premium-glow glow-purple relative overflow-hidden"
+                className="group glass-card !bg-white/[0.02] hover:!bg-white/[0.04] rounded-[3rem] p-10 md:p-12 border-white/[0.03] hover:border-white/10 transition-all flex flex-col lg:flex-row lg:items-center justify-between gap-12 premium-glow glow-purple relative overflow-hidden hover-lift premium-shine"
               >
                 <div className="flex-1 relative z-10">
                   <div className="flex items-center gap-8 mb-10">
@@ -200,9 +223,11 @@ const SettlementTracker = () => {
                   </div>
 
                   <div className="flex flex-col sm:flex-row sm:items-baseline gap-6 mb-10">
-                    <span className="text-7xl font-black text-white tracking-tighter group-hover:text-blue-400 transition-colors duration-700">
-                      ${settlement.totalAmount.toFixed(2)}
-                    </span>
+                    <Counter
+                      value={settlement.totalAmount}
+                      prefix="$"
+                      className="text-7xl font-black text-white tracking-tighter group-hover:text-blue-400 transition-colors duration-700"
+                    />
                     <span className="text-white/20 font-black uppercase tracking-[0.4em] text-[10px] sm:mb-2">
                       Aggregate Value Required
                     </span>
@@ -222,7 +247,7 @@ const SettlementTracker = () => {
                   whileHover={{ scale: 1.02, backgroundColor: '#f8fafc' }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => markAsPaid(settlement)}
-                  className="flex items-center justify-center gap-4 px-12 py-8 bg-white text-[#010409] rounded-[2rem] font-black tracking-[0.3em] text-[11px] transition-all shadow-2xl shadow-white/5 hover:shadow-white/20 group/btn relative z-10 shrink-0"
+                  className="flex items-center justify-center gap-4 px-12 py-8 bg-white text-[#010409] rounded-[2rem] font-black tracking-[0.3em] text-[11px] transition-all shadow-2xl shadow-white/5 hover:shadow-white/20 group/btn relative z-10 shrink-0 premium-shine"
                 >
                   <CheckCircle className="w-6 h-6 group-hover/btn:scale-110 transition-transform duration-500" />
                   <span>AUTHORIZE CLEARANCE</span>
@@ -237,7 +262,7 @@ const SettlementTracker = () => {
           )}
         </motion.div>
       </div>
-    </div>
+    </div >
   );
 };
 

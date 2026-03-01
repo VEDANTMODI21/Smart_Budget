@@ -8,6 +8,8 @@ import Header from '@/components/Header';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import ReminderForm from '@/components/ReminderForm';
+import Counter from '@/components/animations/Counter';
+import SplitText from '@/components/animations/SplitText';
 
 const ReminderNotification = () => {
   const { user } = useAuth();
@@ -121,15 +123,30 @@ const ReminderNotification = () => {
         <div className="max-w-7xl mx-auto px-4 py-20 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8 mb-12">
             <motion.div
-              initial={{ opacity: 0, y: -20 }}
-              animate={{ opacity: 1, y: 0 }}
+              initial="hidden"
+              animate="visible"
+              variants={{
+                hidden: { opacity: 0 },
+                visible: { transition: { staggerChildren: 0.1 } }
+              }}
             >
-              <h1 className="text-4xl md:text-5xl font-black text-white mb-4 tracking-tighter uppercase italic">
-                System <span className="text-gradient">Alerts</span>
-              </h1>
-              <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.4em] ml-1">
+              <motion.h1
+                variants={{
+                  hidden: { y: 30, opacity: 0, scale: 0.95, rotateX: -10 },
+                  visible: { y: 0, opacity: 1, scale: 1, rotateX: 0, transition: { type: "spring", damping: 20, stiffness: 100, duration: 0.8 } }
+                }}
+                className="text-4xl md:text-5xl font-black text-white mb-4 tracking-tighter uppercase italic"
+              >
+                <SplitText text="System " delay={0.2} /> <span className="text-gradient"><SplitText text="Alerts" delay={0.4} /></span>
+              </motion.h1>
+              <motion.p
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                transition={{ delay: 0.8 }}
+                className="text-white/40 text-[10px] font-black uppercase tracking-[0.4em] ml-1"
+              >
                 Automated Notification Hub • Resource Allocation
-              </p>
+              </motion.p>
             </motion.div>
 
             <motion.button
@@ -139,7 +156,7 @@ const ReminderNotification = () => {
                 setEditingReminder(null);
                 setShowReminderForm(true);
               }}
-              className="glass-card !bg-amber-500/10 hover:!bg-amber-500/20 border-amber-500/20 px-8 py-4 rounded-2xl flex items-center gap-3 text-amber-400 font-black text-[10px] tracking-[0.2em] transition-all"
+              className="glass-card !bg-amber-500/10 hover:!bg-amber-500/20 border-amber-500/20 px-8 py-4 rounded-2xl flex items-center gap-3 text-amber-400 font-black text-[10px] tracking-[0.2em] transition-all hover-lift premium-shine"
             >
               <Plus className="w-4 h-4" /> SCHEDULE REMINDER
             </motion.button>
@@ -164,10 +181,10 @@ const ReminderNotification = () => {
                   generalReminders.map((reminder, index) => (
                     <motion.div
                       key={reminder.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.05 }}
-                      className="glass-card rounded-[2rem] p-8 premium-glow glow-amber group relative overflow-hidden"
+                      initial={{ opacity: 0, y: 30, scale: 0.95, rotateX: -5 }}
+                      animate={{ opacity: 1, y: 0, scale: 1, rotateX: 0 }}
+                      transition={{ delay: index * 0.05, type: "spring", damping: 20, stiffness: 100 }}
+                      className="glass-card rounded-[2rem] p-8 premium-glow glow-amber group relative overflow-hidden hover-lift premium-shine"
                     >
                       <div className={`relative z-10 ${reminder.notified ? 'opacity-40' : ''}`}>
                         <div className="flex justify-between items-start mb-6">
@@ -247,11 +264,11 @@ const ReminderNotification = () => {
                   unsettledDebts.map((debt, index) => (
                     <motion.div
                       key={debt.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ delay: index * 0.05 }}
+                      initial={{ opacity: 0, y: 30, scale: 0.95, rotateX: -5 }}
+                      animate={{ opacity: 1, y: 0, scale: 1, rotateX: 0 }}
+                      transition={{ delay: index * 0.05, type: "spring", damping: 20, stiffness: 100 }}
                       whileHover={{ y: -8, scale: 1.02 }}
-                      className="glass-card rounded-[2rem] p-8 overflow-hidden premium-glow glow-purple group cursor-pointer"
+                      className="glass-card rounded-[2rem] p-8 overflow-hidden premium-glow glow-purple group cursor-pointer hover-lift premium-shine"
                     >
                       <div className="relative z-10 flex flex-col h-full">
                         <div className="flex justify-between items-start mb-6">
@@ -260,9 +277,9 @@ const ReminderNotification = () => {
                           </div>
                           <div className="text-right">
                             <p className="text-white/20 text-[9px] font-black uppercase tracking-widest mb-1">Outstanding</p>
-                            <p className="text-3xl font-black text-white tracking-tighter">
-                              ${parseFloat(debt.amount_owed || debt.amount).toFixed(2)}
-                            </p>
+                            <div className="text-3xl font-black text-white tracking-tighter">
+                              <Counter value={parseFloat(debt.amount_owed || debt.amount)} prefix="$" />
+                            </div>
                           </div>
                         </div>
 
